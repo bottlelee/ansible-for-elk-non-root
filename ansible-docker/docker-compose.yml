@@ -1,0 +1,28 @@
+services:
+  semaphore:
+    ports:
+      - 3000:3000
+    image: semaphore
+    container_name: semaphore
+    hostname: semaphore
+    restart: always
+    build:
+      context: .
+    environment:
+      SEMAPHORE_DB_DIALECT: bolt
+      SEMAPHORE_ADMIN: admin
+      SEMAPHORE_ADMIN_PASSWORD: P@ssw0rd
+      SEMAPHORE_ADMIN_NAME: Admin
+      SEMAPHORE_ADMIN_EMAIL: haibin.li@technet.com.mo
+      TZ: Asia/Shanghai
+    volumes:
+      - semaphore_data:/var/lib/semaphore
+      - semaphore_config:/etc/semaphore
+      - semaphore_tmp:/tmp/semaphore
+      - ../:/workdir
+    working_dir: /workdir
+
+volumes:
+  semaphore_data:
+  semaphore_config:
+  semaphore_tmp:
