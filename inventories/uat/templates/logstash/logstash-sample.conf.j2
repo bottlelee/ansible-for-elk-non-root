@@ -1,0 +1,48 @@
+input {
+  beats {
+    port => 5044
+  }
+{% if 'logstash_worker' in group_names %}
+  logstash {
+    port => 9800
+  }
+{% endif %}
+}
+
+output {
+{% if 'logstash_lb' in group_names %}
+
+  logstash {
+    ssl_enabled => false
+    hosts => [
+{% for ip in groups['logstash_worker'] %}
+      "{{ hostvars[ip]['ansible_host'] }}:9800"{{ (loop.nextitem is defined) | ternary(',', '') }}
+{% endfor %}
+    ]
+  }
+
+{% else %}
+
+  elasticsearch {
+{% if elk_tls_enabled %}
+{% if elk_version is version("8", ">=") %}
+    ssl_enabled => true
+    ssl_verification_mode => "certificate"
+    ssl_certificate => "/etc/logstash/tls/uat-certificate.pem"
+    ssl_key => "/etc/logstash/tls/uat-certificate.key"
+{% else %}
+    ssl => true
+    ssl_certificate_verification => false
+{% endif %}
+{% endif %}
+    user => "elastic"
+    password => "{{ es_builtin_users.elastic }}"
+    hosts => [
+{% for ip in es_master_ips %}
+      "{{ elk_schema }}{{ ip }}:9200"{{ (loop.nextitem is defined) | ternary(',', '') }}
+{% endfor %}
+    ]
+    index => "sample-%{+YYYY.MM.dd}"
+  }
+{% endif %}
+}
