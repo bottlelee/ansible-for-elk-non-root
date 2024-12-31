@@ -1,0 +1,42 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for setup_systemd_service
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Set timezone
+  ansible.builtin.timezone:
+    name: "{{ elk_timezone | default('Asia/Shanghai') }}"
+
+- name: Adjust Permissions with polkit
+  ansible.builtin.template:
+    src: polkit.rules.j2
+    dest: /etc/polkit-1/rules.d/90-elk.rules
+    mode: "0644"
+    backup: true
+  notify: Restart polkit
+
+- name: Create/update systemd service | {{ elk_role }}
+  ansible.builtin.template:
+    src: "{{ elk_role }}.service.j2"
+    dest: /etc/systemd/system/{{ elk_role }}.service
+    mode: "0644"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+    backup: true
+  when:
+    - ansible_service_mgr == 'systemd'
+    - elk_role in group_names
+  notify: Systemd daemon reload
+  tags:
+    - always
+
+- name: Config sysctl
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+  loop: "{{ elk_sysctl | default([]) }}"

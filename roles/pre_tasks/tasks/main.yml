@@ -1,0 +1,23 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for pre_tasks
+
+- name: Gather all nodes facts
+  ansible.builtin.setup:
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ groups['all'] }}"
+  tags:
+    - always
+
+- name: Import variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_fileglob:
+    - vars/*.yml
+    - vars/*.yaml
+    - "{{ playbook_dir }}/../vars/*.yml"
+    - "{{ playbook_dir }}/../vars/*.yaml"
+    - "{{ inventory_dir }}/vars/*.yml"
+    - "{{ inventory_dir }}/vars/*.yaml"
+  tags:
+    - always

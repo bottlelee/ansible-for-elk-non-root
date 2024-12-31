@@ -1,0 +1,18 @@
+---
+- name: Initialize OS system
+  hosts: all
+  become: true
+  gather_facts: false
+  roles:
+    - role: init_system
+      vars:
+        elk_role: elasticsearch
+      when: elk_role in group_names
+    - role: init_system
+      vars:
+        elk_role: kibana
+      when: elk_role in group_names
+    - role: init_system
+      vars:
+        elk_role: logstash
+      when: elk_role in group_names

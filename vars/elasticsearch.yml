@@ -1,0 +1,10 @@
+elasticsearch_config:
+  cluster.name: "{{ elk_cluster_name }}"
+  node.name: "{{ inventory_hostname }}"
+  network.host: "{{ ansible_host }}"
+  http.host: "{{ ansible_host }}"
+  bootstrap.memory_lock: true
+  path.data: "{{ elk_data_dir }}/elasticsearch"
+  path.logs: "{{ elk_logs_dir }}/elasticsearch"
+  # discovery.seed_hosts: "{{ groups['es_master'] | map('extract', hostvars, ['ansible_host']) | join(',') }}"
+  # cluster.initial_master_nodes: "{{ groups['es_master'] | map('extract', hostvars, ['ansible_host']) | join(',')

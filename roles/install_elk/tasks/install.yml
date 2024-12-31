@@ -1,0 +1,49 @@
+---
+- name: Install {{ elk_role }}
+  block:
+    - name: Creat remote paths
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0750"
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+      with_items:
+        - "{{ elk_install_dir }}"
+        - "{{ elk_data_dir }}/{{ elk_role }}"
+        - "{{ elk_logs_dir }}/{{ elk_role }}"
+
+    - name: Extract package to {{ elk_install_dir + '/' + elk_role }}
+      ansible.builtin.unarchive:
+        src: "{{ elk_local_package_path }}/{{ elk_role }}/{{ elk_package_full_name }}"
+        dest: "{{ elk_install_dir }}"
+        creates: "{{ elk_install_dir }}/{{ elk_role }}/bin/{{ elk_role }}"
+
+    - name: Update soft link under {{ elk_install_dir + '/' + elk_role }}
+      ansible.builtin.file:
+        src: "{{ elk_install_dir }}/{{ elk_role }}-{{ elk_version }}"
+        dest: "{{ elk_install_dir }}/{{ elk_role }}"
+        state: link
+
+  rescue:
+    - name: Create local packages path under {{ elk_local_package_path }}
+      ansible.builtin.file:
+        path: "{{ elk_local_package_path }}/{{ elk_role }}"
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+
+    - name: Download {{ elk_role }}
+      ansible.builtin.get_url:
+        url: "{{ elk_package_url }}"
+        dest: "{{ elk_local_package_path }}/{{ elk_role }}/"
+        mode: "0444"
+      delegate_to: localhost
+      register: download_package
+      until: download_package is succeeded
+      retries: 3
+      delay: 10
+
+    - name: Repeat install {{ elk_role }}
+      ansible.builtin.include_tasks:
+        file: install.yml

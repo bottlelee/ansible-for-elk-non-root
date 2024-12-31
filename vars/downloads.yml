@@ -1,0 +1,5 @@
+# Download info
+download_elk_packages:
+  elasticsearch: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{ elk_version }}-linux-x86_64.tar.gz"
+  kibana: "https://artifacts.elastic.co/downloads/kibana/kibana-{{ elk_version }}-linux-x86_64.tar.gz"
+  logstash: "https://artifacts.elastic.co/downloads/logstash/logstash-{{ elk_version }}-linux-x86_64.tar.gz"

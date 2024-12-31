@@ -1,0 +1,12 @@
+[Unit]
+Description=Logstash
+After=network.target
+
+[Service]
+User={{ elk_user }}
+Group={{ elk_user }}
+ExecStart={{ elk_install_dir }}/logstash/bin/logstash
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

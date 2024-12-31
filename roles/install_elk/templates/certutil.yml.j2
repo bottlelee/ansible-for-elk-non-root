@@ -1,0 +1,10 @@
+instances:
+{% for node in groups['elk'] %}
+  - name: "{{ hostvars[node].inventory_hostname }}"
+    dns:
+      - "{{ hostvars[node].inventory_hostname }}"
+      - "localhost"
+    ip:
+      - "127.0.0.1"
+      - "{{ hostvars[node].ansible_host }}"
+{% endfor %}

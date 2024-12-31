@@ -1,0 +1,21 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for install_elk
+
+- name: Set package info
+  ansible.builtin.set_fact:
+    elk_package_url: "{{ item.value }}"
+    elk_package_full_name: "{{ item.value | basename }}"
+    elk_package_short_name: "{{ item.value | basename | replace('.tar.gz', '') }}"
+  with_dict: "{{ download_elk_packages }}"
+  loop_control:
+    label: "{{ item.value }}"
+  when: item.key == elk_role
+
+- name: Import install tasks
+  ansible.builtin.import_tasks:
+    file: install.yml
+
+- name: Update cert files if needed
+  ansible.builtin.import_tasks:
+    file: update_cert_files.yml

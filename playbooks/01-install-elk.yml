@@ -1,0 +1,30 @@
+---
+- name: Gather all nodes facts
+  hosts: all
+  become: false
+  gather_facts: false
+  roles:
+    - role: pre_tasks
+      run_once: true
+
+- name: Install ELK cluster
+  hosts: elasticsearch:kibana:logstash
+  serial: 1
+  become: false
+  gather_facts: false
+  roles:
+    - role: install_elk
+      tags: elasticsearch
+      vars:
+        elk_role: elasticsearch
+      when: "'elasticsearch' in group_names"
+    - role: install_elk
+      tags: kibana
+      vars:
+        elk_role: kibana
+      when: "'kibana' in group_names"
+    - role: install_elk
+      tags: logstash
+      vars:
+        elk_role: logstash
+      when: "'logstash' in group_names"

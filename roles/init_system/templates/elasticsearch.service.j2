@@ -1,0 +1,15 @@
+[Unit]
+Description=Elasticsearch
+After=network.target
+
+[Service]
+User={{ elk_user }}
+Group={{ elk_user }}
+ExecStart={{ elk_install_dir }}/elasticsearch/bin/elasticsearch
+Restart=always
+WorkingDirectory={{ elk_install_dir }}/elasticsearch/
+LimitNOFILE=65536
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target

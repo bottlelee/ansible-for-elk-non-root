@@ -1,0 +1,71 @@
+---
+- name: Manage PKCS#12 files
+  block:
+    - name: Create certificates path
+      ansible.builtin.file:
+        path: "{{ elk_install_dir }}/{{ elk_role }}/config/certs"
+        state: directory
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+        mode: "0750"
+
+    - name: Upload cert files
+      ansible.builtin.copy:
+        src: "{{ inventory_dir }}/credentials/certs/{{ item }}"
+        dest: "{{ elk_install_dir }}/{{ elk_role }}/config/certs/{{ item }}"
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+        mode: "0440"
+      with_items:
+        - "{{ elk_cert_http }}"
+        - "{{ elk_cert_transport }}"
+
+  rescue:
+    - name: Generate transport.p12 certificates
+      ansible.builtin.command:
+        argv:
+          - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-certutil"
+          - ca
+          - --silent
+          - --pass
+          - ${CERT_PASSWORD}
+          - --out
+          - "{{ elk_install_dir }}/elasticsearch/config/certs/{{ item }}"
+        creates: "{{ elk_install_dir }}/elasticsearch/config/certs/{{ item }}"
+      environment:
+        CERT_PASSWORD: "{{ lookup('password', inventory_dir + '/credentials/passwords/cert_password.txt', length=22, chars='ascii_letters,ascii_digits') }}"
+      with_items:
+        - "{{ elk_cert_http }}"
+        - "{{ elk_cert_transport }}"
+      delegate_to: "{{ groups['es_master'][0] }}"
+
+    - name: Update {{ elk_base_dir + '/certutil.yml' }}
+      ansible.builtin.copy:
+        content: "{{ lookup('template', 'certutil.yml.j2') | from_yaml | to_nice_yaml }}"
+        dest: "{{ elk_base_dir }}/certutil.yml"
+        backup: true
+      register: certutil
+      delegate_to: "{{ groups['es_master'][0] }}"
+
+    - name: Create local path for certificates
+      ansible.builtin.file:
+        path: "{{ inventory_dir }}/credentials/certs/"
+        state: directory
+        mode: "0750"
+      delegate_to: localhost
+      become: false
+
+    - name: Fetch certificates
+      ansible.builtin.fetch:
+        src: "{{ elk_install_dir }}/elasticsearch/config/certs/{{ item }}"
+        dest: "{{ inventory_dir }}/credentials/certs/{{ item }}"
+        flat: true
+        backup: true
+      with_items:
+        - "{{ elk_cert_http }}"
+        - "{{ elk_cert_transport }}"
+      delegate_to: "{{ groups['es_master'][0] }}"
+      become: false
+
+    - name: Repeat tasks
+      ansible.builtin.include_tasks: update_cert_files.yml

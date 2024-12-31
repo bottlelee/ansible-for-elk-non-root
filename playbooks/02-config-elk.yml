@@ -1,0 +1,19 @@
+---
+- name: Gather all nodes facts
+  ansible.builtin.import_playbook: 00-init-os-system.yml
+
+- name: Config ELK
+  hosts: elasticsearch:kibana:logstash
+  serial: 1
+  become: false
+  gather_facts: false
+  roles:
+    - role: config_elasticsearch
+      tags: elasticsearch
+      when: "'elasticsearch' in group_names"
+    - role: config_kibana
+      tags: kibana
+      when: "'kibana' in group_names"
+    - role: config_logstash
+      tags: logstash
+      when: "'logstash' in group_names"

@@ -1,0 +1,14 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for config_elasticsearch
+
+- name: Update elasticsearch.yml
+  ansible.builtin.lineinfile:
+    path: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml"
+    regexp: ^{{ item.key }}
+    line: "{{ item.key }}: {{ item.value }}"
+    state: present
+  with_dict: "{{ elasticsearch_config }}"
+  loop_control:
+    label: "{{ item.key }}: {{ item.value }}"
+  notify: Restart elasticsearch
