@@ -9,22 +9,24 @@
 
 - name: Install ELK cluster
   hosts: elasticsearch:kibana:logstash
-  serial: 1
   become: false
   gather_facts: false
+  serial: 1
   roles:
     - role: install_elk
-      tags: elasticsearch
       vars:
         elk_role: elasticsearch
       when: "'elasticsearch' in group_names"
+
+    - role: install_nginx
+      when: "'nginx' in group_names"
+
     - role: install_elk
-      tags: kibana
       vars:
         elk_role: kibana
       when: "'kibana' in group_names"
+
     - role: install_elk
-      tags: logstash
       vars:
         elk_role: logstash
       when: "'logstash' in group_names"

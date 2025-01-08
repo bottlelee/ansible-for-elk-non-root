@@ -1,6 +1,11 @@
 ---
 - name: Gather all nodes facts
-  ansible.builtin.import_playbook: 00-init-os-system.yml
+  hosts: all
+  become: false
+  gather_facts: false
+  roles:
+    - role: pre_tasks
+      run_once: true
 
 - name: Config ELK
   hosts: elasticsearch:kibana:logstash
