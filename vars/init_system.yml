@@ -1,0 +1,15 @@
+# Config sysctl
+init_system_sysctl:
+  vm.max_map_count: 262144
+  vm.swappiness: 1
+  vm.overcommit_memory: 1
+  fs.file-max: 65536
+
+# Config user limits
+init_system_ulimit:
+  - "{{ elk_user }} - nofile 65536"
+  - "{{ elk_user }} soft memlock unlimited"
+  - "{{ elk_user }} hard memlock unlimited"
+
+# Enable SSH key login
+init_system_ssh_key_login: true
