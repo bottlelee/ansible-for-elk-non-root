@@ -26,7 +26,8 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell" do |s|
     s.inline = <<-SHELL
     sed -i "s|PasswordAuthentication no|PasswordAuthentication yes|g" /etc/ssh/sshd_config
-    echo "nameserver 223.5.5.5" | tee /etc/resolv.conf
+    echo "nameserver 8.8.8.8" | tee -a /etc/resolv.conf
+    echo "nameserver 223.5.5.5" | tee -a /etc/resolv.conf
     echo "NETWORKING_IPV6=no" | tee -a /etc/sysconfig/network
     echo "IPV6INIT=no" | tee -a /etc/sysconfig/network-scripts/ifcfg-eth1
     echo "IPV6_AUTOCONF=no" | tee -a /etc/sysconfig/network-scripts/ifcfg-eth1
@@ -37,17 +38,16 @@ Vagrant.configure("2") do |config|
     echo "IPV6_AUTOTUNNEL=no" | tee -a /etc/sysconfig/network-scripts/ifcfg-eth1
 
     timedatectl set-timezone "Asia/Shanghai"
-    timedatectl
+    timedatectl status
 
     dnf install -y epel-release
     /usr/bin/crb enable
 
     dnf install -y bzip2 expect net-tools chrony tar gzip readline-devel \
       patch ncurses-devel libaio-devel glibc-devel flex bison nano htop \
-      NetworkManager-initscripts-updown byobu
+      byobu python3 python3-pip
 
-    ifdown eth1
-    ifup eth1
+     /bin/systemctl restart NetworkManager.service
     /bin/systemctl restart sshd.service
     SHELL
   end
