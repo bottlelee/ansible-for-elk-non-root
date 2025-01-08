@@ -8,6 +8,7 @@ Group={{ elk_user }}
 ExecStart={{ elk_install_dir }}/kibana/bin/kibana
 ExecReload="{{ elk_install_dir }}/kibana/bin/kibana --config.reload"
 ExecStop="{{ elk_install_dir }}/kibana/bin/kibana --config.shutdown"
+WorkingDirectory={{ elk_install_dir }}/kibana
 Restart=always
 
 [Install]

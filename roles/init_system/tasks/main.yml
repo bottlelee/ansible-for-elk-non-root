@@ -18,25 +18,58 @@
     backup: true
   notify: Restart polkit
 
-- name: Create/update systemd service | {{ elk_role }}
+- name: Create/update /etc/systemd/system/{{ elk_role }}.service
   ansible.builtin.template:
-    src: "{{ elk_role }}.service.j2"
+    src: "{{ service_template }}"
     dest: /etc/systemd/system/{{ elk_role }}.service
     mode: "0644"
     owner: "{{ elk_user }}"
     group: "{{ elk_group }}"
-    backup: true
-  when:
-    - ansible_service_mgr == 'systemd'
-    - elk_role in group_names
-  notify: Systemd daemon reload
-  tags:
-    - always
+  with_fileglob:
+    - "{{ role_path }}/templates/{{ elk_role }}.service.j2"
+  loop_control:
+    loop_var: service_template
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    name: "{{ elk_role }}"
+    daemon_reload: true
+    enabled: true
 
 - name: Config sysctl
   ansible.posix.sysctl:
-    name: "{{ item.key }}"
-    value: "{{ item.value }}"
+    name: "{{ sysctl.key }}"
+    value: "{{ sysctl.value }}"
     state: present
+    ignoreerrors: true
     reload: true
-  loop: "{{ elk_sysctl | default([]) }}"
+  with_dict: "{{ init_system_sysctl | default([]) }}"
+  loop_control:
+    loop_var: sysctl
+    label: "{{ sysctl.key }}={{ sysctl.value }}"
+
+- name: Config ulimit
+  pam_limits:
+    domain: "{{ limit_domain }}"
+    limit_type: "{{ limit_type }}"
+    limit_item: "{{ limit_item }}"
+    value: "{{ limit_value }}"
+    use_max: true
+    dest: /etc/security/limits.d/99-elk.conf
+  loop: "{{ init_system_ulimit | default([]) }}"
+  loop_control:
+    loop_var: ulimit
+  vars:
+    limit_domain: "{{ ulimit.split(' ')[0] }}"
+    limit_type: "{{ ulimit.split(' ')[1] }}"
+    limit_item: "{{ ulimit.split(' ')[2] }}"
+    limit_value: "{{ ulimit.split(' ')[3] }}"
+
+- name: Config /etc/hosts
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: |-
+      {% for host in (groups['all'] | sort) %}
+      {{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}.{{ elk_domain_name }}
+      {% endfor %}
+    backup: true

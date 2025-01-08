@@ -9,9 +9,6 @@
     daemon_reload: true
     enabled: true
 
-- name: Systemd daemon reload
-  ansible.builtin.service:
-    name: "{{ elk_role }}"
-    state: present
-    daemon_reload: true
-    enabled: true
+# - name: Reload systemd
+#   ansible.builtin.systemd:
+#     daemon_reload: true

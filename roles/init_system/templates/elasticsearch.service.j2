@@ -1,15 +1,24 @@
 [Unit]
 Description=Elasticsearch
-After=network.target
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 User={{ elk_user }}
 Group={{ elk_user }}
-ExecStart={{ elk_install_dir }}/elasticsearch/bin/elasticsearch
-Restart=always
-WorkingDirectory={{ elk_install_dir }}/elasticsearch/
-LimitNOFILE=65536
+
+WorkingDirectory={{ elk_install_dir }}/elasticsearch
+ExecStart={{ elk_install_dir }}/elasticsearch/bin/elasticsearch --pidfile {{ elk_logs_dir }}/elasticsearch/elasticsearch.pid --quiet
+PIDFile={{ elk_logs_dir }}/elasticsearch/elasticsearch.pid
+
+LimitNOFILE=262144
+LimitNPROC=4096
+LimitAS=infinity
+LimitFSIZE=infinity
 LimitMEMLOCK=infinity
+
+TimeoutStopSec=900
+TimeoutStartSec=900
 
 [Install]
 WantedBy=multi-user.target
