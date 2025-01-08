@@ -1,3 +1,4 @@
 files/*
 credentials
 .vagrant
+inventories/uat/files/*
