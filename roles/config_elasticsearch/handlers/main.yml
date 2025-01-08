@@ -1,8 +1,23 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # handlers file for config_elasticsearch
+- name: Tasks for Restart elasticsearch
+  block:
+    - name: Restart elasticsearch
+      ansible.builtin.import_tasks:
+        file: restart.yml
+      listen: Restart elasticsearch
 
-- name: Restart elasticsearch
-  ansible.builtin.service:
-    name: elasticsearch
-    state: restarted
+  rescue:
+    - name: Restore elasticsearch.yml from backup
+      ansible.builtin.copy:
+        src: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml.bak"
+        dest: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml"
+        mode: "0640"
+        remote_src: true
+      listen: Restart elasticsearch
+
+    - name: Restart elasticsearch
+      ansible.builtin.import_tasks:
+        file: restart.yml
+      listen: Restart elasticsearch

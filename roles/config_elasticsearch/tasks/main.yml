@@ -2,13 +2,11 @@
 ---
 # tasks file for config_elasticsearch
 
+# CAUTION: DO NOT change the `marker` value in the blockinfile module
 - name: Update elasticsearch.yml
-  ansible.builtin.lineinfile:
+  ansible.builtin.blockinfile:
     path: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml"
-    regexp: ^{{ item.key }}
-    line: "{{ item.key }}: {{ item.value }}"
-    state: present
-  with_dict: "{{ elasticsearch_config }}"
-  loop_control:
-    label: "{{ item.key }}: {{ item.value }}"
+    block: "{{ elasticsearch_config | to_nice_yaml }}"
+    marker: "#-------------------------- {mark} ANSIBLE MANAGED BLOCK --------------------------"
   notify: Restart elasticsearch
+  when: elasticsearch_config is defined

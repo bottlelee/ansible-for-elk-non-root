@@ -1,0 +1,42 @@
+---
+- name: Unset 'cluster.initial_master_nodes' from elasticsearch.yml
+  ansible.builtin.lineinfile:
+    path: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml"
+    regexp: "^cluster.initial_master_nodes:"
+    state: absent
+  listen: Restart elasticsearch
+
+- name: Update 'discovery.seed_hosts' in elasticsearch.yml
+  ansible.builtin.lineinfile:
+    path: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml"
+    line: "discovery.seed_hosts: {{ elasticsearch_discovery_seed_hosts }}"
+    regexp: "^discovery.seed_hosts:"
+  listen: Restart elasticsearch
+
+- name: Restarting elasticsearch
+  ansible.builtin.service:
+    name: elasticsearch
+    state: restarted
+  listen: Restart elasticsearch
+
+- name: Wait for started
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: "{{ elasticsearch_http_port | default(9200) }}"
+    timeout: 300
+  listen: Restart elasticsearch
+
+- name: Backup current elasticsearch.yml
+  ansible.builtin.copy:
+    src: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml"
+    dest: "{{ elk_install_dir }}/elasticsearch/config/.elasticsearch.yml.{{ ansible_date_time.iso8601_basic_short }}"
+    mode: "0640"
+    remote_src: true
+  listen: Restart elasticsearch
+
+- name: Update soft link 'elasticsearch.yml.bak'
+  ansible.builtin.file:
+    src: "{{ elk_install_dir }}/elasticsearch/config/.elasticsearch.yml.{{ ansible_date_time.iso8601_basic_short }}"
+    dest: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml.bak"
+    state: link
+  listen: Restart elasticsearch
