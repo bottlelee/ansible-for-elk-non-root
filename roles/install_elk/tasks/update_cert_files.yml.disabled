@@ -1,0 +1,113 @@
+---
+- name: Manage PKCS#12 files
+  block:
+    - name: Create certificates path
+      ansible.builtin.file:
+        path: "{{ elk_install_dir }}/{{ elk_role }}/config/certs"
+        state: directory
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+        mode: "0750"
+
+    - name: Upload cert files
+      ansible.builtin.copy:
+        src: "{{ inventory_dir }}/credentials/certs/{{ item }}"
+        dest: "{{ elk_install_dir }}/{{ elk_role }}/config/certs/{{ item }}"
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+        mode: "0440"
+      with_items:
+        - "{{ elk_cert_http }}"
+        - "{{ elk_cert_transport }}"
+
+  rescue:
+    - name: Clear up existed files
+      ansible.builtin.file:
+        path: "{{ elk_install_dir }}/elasticsearch/config/certs/{{ item }}"
+        state: absent
+      with_items:
+        - "{{ elk_cert_http }}"
+        - "{{ elk_cert_transport }}"
+        - "{{ elk_cert_ca_cert }}"
+      delegate_to: "{{ groups['es_master'][0] }}"
+
+    - name: Generate {{ elk_cert_ca_cert }}
+      ansible.builtin.command:
+        argv:
+          - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-certutil"
+          - ca
+          - --days
+          - "3650"
+          - --silent
+          - --pass
+          - "{{ elasticsearch_cert_password }}"
+          - --out
+          - "{{ elk_install_dir }}/elasticsearch/config/certs/{{ elk_cert_ca_cert }}"
+
+    - name: Generate {{ elk_cert_transport }}
+      ansible.builtin.command:
+        argv:
+          - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-certutil"
+          - cert
+          - --days
+          - "3650"
+          - --silent
+          - --ca
+          - "{{ elk_install_dir }}/elasticsearch/config/certs/{{ elk_cert_ca_cert }}"
+          - --ca-pass
+          - "{{ elasticsearch_cert_password }}"
+          - --pass
+          - "{{ elasticsearch_cert_password }}"
+          - --out
+          - "{{ elk_install_dir }}/elasticsearch/config/certs/{{ elk_cert_transport }}"
+      delegate_to: "{{ groups['es_master'][0] }}"
+
+    - name: Update {{ elk_install_dir + '/certutil.yml' }}
+      ansible.builtin.copy:
+        content: "{{ lookup('template', 'certutil.yml.j2') | from_yaml | to_nice_yaml }}"
+        dest: "{{ elk_install_dir }}/certutil.yml"
+        backup: true
+      register: certutil
+      delegate_to: "{{ groups['es_master'][0] }}"
+
+    - name: Generate {{ elk_cert_http }}
+      ansible.builtin.command:
+        argv:
+          - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-certutil"
+          - cert
+          - --days
+          - "3650"
+          - --silent
+          - --ca
+          - "{{ elk_install_dir }}/elasticsearch/config/certs/{{ elk_cert_ca_cert }}"
+          - --ca-pass
+          - "{{ elasticsearch_cert_password }}"
+          - --pass
+          - "{{ elasticsearch_cert_password }}"
+          - --out
+          - "{{ elk_install_dir }}/elasticsearch/config/certs/{{ elk_cert_transport }}"
+      delegate_to: "{{ groups['es_master'][0] }}"
+
+    - name: Create local path for certificates
+      ansible.builtin.file:
+        path: "{{ inventory_dir }}/credentials/certs/"
+        state: directory
+        mode: "0750"
+      delegate_to: localhost
+      become: false
+
+    - name: Fetch certificates
+      ansible.builtin.fetch:
+        src: "{{ elk_install_dir }}/elasticsearch/config/certs/{{ item }}"
+        dest: "{{ inventory_dir }}/credentials/certs/{{ item }}"
+        flat: true
+        backup: true
+      with_items:
+        - "{{ elk_cert_http }}"
+        - "{{ elk_cert_transport }}"
+        - "{{ elk_cert_ca_cert }}"
+      delegate_to: "{{ groups['es_master'][0] }}"
+      become: false
+
+    - name: Repeat tasks
+      ansible.builtin.include_tasks: update_cert_files.yml

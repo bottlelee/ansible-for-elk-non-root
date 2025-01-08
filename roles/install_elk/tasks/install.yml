@@ -8,16 +8,19 @@
         mode: "0750"
         owner: "{{ elk_user }}"
         group: "{{ elk_group }}"
-      with_items:
-        - "{{ elk_install_dir }}"
-        - "{{ elk_data_dir }}/{{ elk_role }}"
-        - "{{ elk_logs_dir }}/{{ elk_role }}"
+      vars:
+        create_paths:
+          - "{{ elk_data_dir }}/{{ elk_role }}"
+          - "{{ elk_logs_dir }}/{{ elk_role }}"
+          - "{{ elk_pkgs_dir }}"
+          - "{{ elk_install_dir }}"
+      loop: "{{ create_paths | sort }}"
 
-    - name: Extract package to {{ elk_install_dir + '/' + elk_role }}
+    - name: Extract package to {{ elk_install_dir + '/' + elk_role + '-' + elk_version }}
       ansible.builtin.unarchive:
         src: "{{ elk_local_package_path }}/{{ elk_role }}/{{ elk_package_full_name }}"
         dest: "{{ elk_install_dir }}"
-        creates: "{{ elk_install_dir }}/{{ elk_role }}/bin/{{ elk_role }}"
+        creates: "{{ elk_install_dir }}/{{ elk_role }}-{{ elk_version }}/bin/{{ elk_role }}"
 
     - name: Update soft link under {{ elk_install_dir + '/' + elk_role }}
       ansible.builtin.file:
@@ -33,7 +36,12 @@
         mode: "0755"
       delegate_to: localhost
 
-    - name: Download {{ elk_role }}
+    - name: Print tips
+      ansible.builtin.debug:
+        msg: Downloading from {{ elk_package_url }}, please wait...
+      run_once: true
+
+    - name: Downloading...
       ansible.builtin.get_url:
         url: "{{ elk_package_url }}"
         dest: "{{ elk_local_package_path }}/{{ elk_role }}/"

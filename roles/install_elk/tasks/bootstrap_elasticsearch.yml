@@ -1,0 +1,47 @@
+---
+- name: Bootstrapping Elasticsearch
+  ansible.builtin.service:
+    name: elasticsearch
+    state: started
+
+- name: Wait for bootstrap node to be ready
+  ansible.builtin.wait_for:
+    host: "{{ elasticsearch_config['http.host'] }}"
+    port: "{{ elasticsearch_config['http.port'] }}"
+    timeout: 300
+
+- name: Create local paths
+  ansible.builtin.file:
+    path: "{{ path }}"
+    state: directory
+    mode: "0750"
+  with_items:
+    - "{{ inventory_dir }}/credentials/certs"
+    - "{{ inventory_dir }}/credentials/passwords"
+  loop_control:
+    loop_var: path
+  become: false
+  delegate_to: localhost
+
+- name: Update built-in users password
+  ansible.builtin.include_tasks:
+    file: update_built_in_users_password.yml
+  with_items:
+    - apm_system
+    - beats_system
+    - elastic
+    - kibana_system
+    - logstash_system
+    - remote_monitoring_user
+  loop_control:
+    loop_var: built_in_user
+
+- name: Fetch certificate files from bootstrap node
+  ansible.builtin.fetch:
+    src: "{{ elk_install_dir }}/elasticsearch/config/certs/{{ item }}"
+    dest: "{{ inventory_dir }}/credentials/certs/"
+    flat: true
+  with_items:
+    - http_ca.crt
+    - http.p12
+    - transport.p12

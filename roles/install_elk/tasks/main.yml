@@ -4,18 +4,59 @@
 
 - name: Set package info
   ansible.builtin.set_fact:
-    elk_package_url: "{{ item.value }}"
-    elk_package_full_name: "{{ item.value | basename }}"
-    elk_package_short_name: "{{ item.value | basename | replace('.tar.gz', '') }}"
+    elk_package_url: "{{ package.value }}"
+    elk_package_full_name: "{{ package.value | basename }}"
+    elk_package_short_name: "{{ package.value | basename | replace('.tar.gz', '') }}"
   with_dict: "{{ download_elk_packages }}"
   loop_control:
-    label: "{{ item.value }}"
-  when: item.key == elk_role
+    loop_var: package
+    label: "{{ package.value | basename }}"
+  when: package.key == elk_role
 
 - name: Import install tasks
   ansible.builtin.import_tasks:
     file: install.yml
 
-- name: Update cert files if needed
-  ansible.builtin.import_tasks:
-    file: update_cert_files.yml
+- name: Import config tasks
+  ansible.builtin.include_role:
+    name: config_{{ elk_role }}
+
+- name: Bootstrap elasticsearch
+  delegate_to: "{{ elasticsearch_bootstrap_host }}"
+  # run_once: true
+  when:
+    - elasticsearch_bootstrap_enabled or elasticsearch_force_bootstrap
+    - ansible_host == elasticsearch_bootstrap_host
+  block:
+    - name: Bootstrap elasticsearch
+      ansible.builtin.import_tasks:
+        file: bootstrap_elasticsearch.yml
+
+- name: Pre-tasks for enrollment
+  # run_once: true
+  block:
+    - name: Checking if node is already enrolled
+      ansible.builtin.uri:
+        url: https://{{ elasticsearch_bootstrap_host }}:{{ elasticsearch_http_port }}/_cat/nodes
+        url_username: elastic
+        url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
+        force_basic_auth: true
+        validate_certs: false
+        return_content: true
+      register: cluster_nodes
+
+    - name: Load/create enrollment token
+      ansible.builtin.import_tasks:
+        file: enrollment_token.yml
+
+- name: Enroll new nodes into the cluster
+  ansible.builtin.include_tasks:
+    file: enroll_new_nodes.yml
+  when:
+    - elasticsearch_bootstrap_host not in ansible_all_ipv4_addresses
+    - "'elasticsearch' in group_names"
+    - inventory_hostname not in cluster_nodes.content
+
+- name: Print cluster nodes list
+  ansible.builtin.debug:
+    msg: "{{ cluster_nodes.content }}"

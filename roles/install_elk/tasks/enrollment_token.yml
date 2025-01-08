@@ -1,0 +1,61 @@
+---
+- name: Check local enrollment token file
+  ansible.builtin.stat:
+    path: "{{ inventory_dir }}/files/enrollment-token"
+  register: local_enrollment_token
+  delegate_to: "{{ elasticsearch_bootstrap_host }}"
+  when: elk_enrollment_token is not defined
+
+- name: Calculate time differ
+  ansible.builtin.set_fact:
+    time_differ: >-
+      {{
+        (ansible_date_time.epoch | int)
+          -
+        (local_enrollment_token.stat.mtime | default(0) | int)
+      }}
+
+- name: Read enrollment token
+  ansible.builtin.set_fact:
+    elk_enrollment_token: "{{ lookup('file', '{{ inventory_dir }}/files/enrollment-token') }}"
+  when:
+    - local_enrollment_token.stat.exists
+    - (time_differ | int) < 900 # Fresh token in 15 minutes
+
+- name: Update enrollment token
+  when:
+    - (time_differ | int) > 900 # Old token more than 15 minutes
+
+  block:
+    - name: Create enrollment token for node scope
+      ansible.builtin.command:
+        argv:
+          - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-create-enrollment-token"
+          - --scope
+          - node
+      changed_when: false
+      register: enrollment_token
+      delegate_to: "{{ elasticsearch_bootstrap_host }}"
+
+    - name: Create local path 'files' if not exists
+      ansible.builtin.file:
+        path: "{{ inventory_dir }}/files"
+        state: directory
+        mode: "0700"
+      delegate_to: localhost
+
+    - name: Save new enrollment token
+      ansible.builtin.copy:
+        content: "{{ enrollment_token.stdout }}"
+        dest: "{{ inventory_dir }}/files/enrollment-token"
+        mode: "0600"
+      delegate_to: localhost
+      become: false
+
+    - name: Update `elk_enrollment_token` variable
+      ansible.builtin.set_fact:
+        elk_enrollment_token: "{{ enrollment_token.stdout }}"
+
+- name: Print enrollment token
+  ansible.builtin.debug:
+    var: elk_enrollment_token

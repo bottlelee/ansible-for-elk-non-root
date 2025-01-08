@@ -3,8 +3,9 @@ instances:
   - name: "{{ hostvars[node].inventory_hostname }}"
     dns:
       - "{{ hostvars[node].inventory_hostname }}"
+      - "{{ hostvars[node].inventory_hostname }}.{{ elk_domain_name }}"
       - "localhost"
     ip:
-      - "127.0.0.1"
       - "{{ hostvars[node].ansible_host }}"
+      - "127.0.0.1"
 {% endfor %}

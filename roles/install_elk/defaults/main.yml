@@ -1,3 +1,5 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # defaults file for install_elk
+
+elasticsearch_force_bootstrap: false
