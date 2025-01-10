@@ -1,5 +1,5 @@
 ---
-- name: Install nginx
+- name: Prepare nginx installation
   block:
     - name: Create {{ elk_install_dir }}
       ansible.builtin.file:
@@ -9,17 +9,18 @@
         owner: "{{ elk_user }}"
         group: "{{ elk_group }}"
       with_items:
-        - "{{ elk_install_dir }}"
+        - "{{ elk_install_dir }}/nginx/streams.d"
+        - "{{ elk_install_dir }}/nginx/sites.d"
         - "{{ elk_logs_dir }}/nginx/"
+        - "{{ elk_build_dir }}/nginx/"
       loop_control:
         loop_var: path
 
     - name: Extract nginx package to remote host
       ansible.builtin.unarchive:
-        src: "{{ elk_local_package_path }}/{{ download_elk_packages.nginx | basename }}"
-        dest: "{{ elk_install_dir }}"
-        creates: "{{ elk_install_dir }}/{{ download_elk_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
-      notify: Install nginx
+        src: "{{ elk_local_package_path }}/{{ download_packages.nginx | basename }}"
+        dest: "{{ elk_build_dir }}"
+        creates: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
 
     - name: Install yum packages
       ansible.builtin.dnf:
@@ -32,13 +33,12 @@
         - openssl-devel
       when: ansible_pkg_mgr in ('yum', 'dnf')
       become: true
-      notify: Install nginx
 
   rescue:
     - name: Download nginx
       ansible.builtin.get_url:
-        url: "{{ download_elk_packages.nginx }}"
-        dest: "{{ elk_local_package_path }}/{{ download_elk_packages.nginx | basename }}"
+        url: "{{ download_packages.nginx }}"
+        dest: "{{ elk_local_package_path }}/{{ download_packages.nginx | basename }}"
         mode: "0644"
       delegate_to: localhost
       become: false

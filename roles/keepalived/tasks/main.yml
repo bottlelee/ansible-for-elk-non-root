@@ -1,0 +1,59 @@
+---
+# tasks file for keepalived
+- name: Install/config keepalived
+  block:
+    - name: Checking service status
+      ansible.builtin.service:
+        name: keepalived
+        state: started
+
+    - name: Checking if keepalived configure args has been changed
+      ansible.builtin.copy:
+        content: "{{ keepalived_configure_args_hash }}"
+        dest: "{{ inventory_dir }}/files/keepalived_configure_args_hash"
+        mode: "0640"
+      delegate_to: localhost
+      register: keepalived_configure_args_hash_result
+      become: false
+
+    - name: Re-install keepalived
+      ansible.builtin.import_tasks:
+        file: install_keepalived.yml
+      when: keepalived_configure_args_hash_result is changed
+
+  rescue:
+    - name: Install keepalived
+      ansible.builtin.import_tasks:
+        file: install_keepalived.yml
+
+- name: Create conf.d path
+  ansible.builtin.file:
+    path: "{{ elk_install_dir }}/keepalived/conf.d"
+    state: directory
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+    recurse: true
+  become: true
+
+- name: Config virtual server
+  ansible.builtin.template:
+    src: keepalived/vrrp_instance.conf.j2
+    dest: "{{ elk_install_dir }}/keepalived/conf.d/{{ instance.name | lower }}.conf"
+    mode: "0640"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+  loop: "{{ keepalived_vrrp_instances }}"
+  loop_control:
+    loop_var: instance
+    label: "{{ instance.name }}"
+
+- name: Update keepalived config
+  ansible.builtin.template:
+    src: keepalived/keepalived.conf.j2
+    dest: "{{ elk_install_dir }}/keepalived/etc/keepalived/keepalived.conf"
+    mode: "0640"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+    validate: "{{ elk_install_dir }}/keepalived/sbin/keepalived -t -f %s"
+  become: true
+  notify: Restart keepalived

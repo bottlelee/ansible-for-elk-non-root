@@ -1,0 +1,83 @@
+---
+- name: Prepare keepalived
+  block:
+    - name: Create some paths
+      ansible.builtin.file:
+        path: "{{ path }}"
+        state: directory
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+        mode: "0755"
+      with_items:
+        - "{{ elk_build_dir }}"
+        - "{{ elk_logs_dir }}/keepalived"
+      loop_control:
+        loop_var: path
+
+    - name: Unarchive keepalived package
+      ansible.builtin.unarchive:
+        src: "{{ download_packages.keepalived | basename }}"
+        dest: "{{ elk_build_dir }}"
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+        creates: "{{ elk_build_dir }}/{{ download_packages.keepalived | basename | regex_replace('.tar.gz', '') }}"
+
+    - name: Install keepalived dependencies
+      ansible.builtin.package:
+        name: "{{ keepalived_dependencies.yum }}"
+      when: ansible_pkg_mgr in ['yum', 'dnf']
+      become: true
+
+    - name: Install keepalived dependencies
+      ansible.builtin.package:
+        name: "{{ keepalived_dependencies.apt }}"
+      when: ansible_pkg_mgr in ['apt', 'apt-get']
+      become: true
+
+    - name: Print configure args
+      ansible.builtin.debug:
+        msg: ./configure {{ keepalived_configure_args | sort | join(' ') }}
+
+    - name: Starting configure keepalived
+      ansible.builtin.command: ./configure {{ keepalived_configure_args | sort | join(' ') }}
+      args:
+        chdir: "{{ elk_build_dir }}/{{ download_packages.keepalived | basename | regex_replace('.tar.gz', '') }}"
+      changed_when: true
+      notify: Restart keepalived
+
+    - name: Build and install keepalived
+      community.general.make:
+        chdir: "{{ elk_build_dir }}/{{ download_packages.keepalived | basename | regex_replace('.tar.gz', '') }}"
+        target: install
+        jobs: "{{ ansible_processor_cores }}"
+      become: true
+
+    - name: Allow keepalived service control by '{{ elk_user }}'
+      ansible.builtin.template:
+        src: systemd/polkit.rules.j2
+        dest: /etc/polkit-1/rules.d/50-{{ elk_role }}.rules
+        owner: root
+        group: root
+        mode: "0644"
+      vars:
+        elk_role: keepalived
+      become: true
+
+    - name: Restart polkit service
+      ansible.builtin.systemd:
+        name: polkit
+        state: restarted
+        daemon_reload: true
+      become: true
+
+  rescue:
+    - name: Download keepalived package
+      ansible.builtin.get_url:
+        url: "{{ download_packages.keepalived }}"
+        dest: "{{ playbook_dir }}/files/"
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+    - name: Restart tasks
+      ansible.builtin.include_tasks: install_keepalived.yml

@@ -1,0 +1,40 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for install_nginx
+
+- name: Tasks for nginx install
+  block:
+    - name: Checking if nginx configure args has been changed
+      ansible.builtin.copy:
+        content: "{{ nginx_configure_args_hash }}"
+        dest: "{{ inventory_dir }}/files/nginx_configure_args_hash"
+        mode: "0640"
+      delegate_to: localhost
+      register: nginx_configure_args_hash_result
+      run_once: true
+
+    - name: Install nginx
+      ansible.builtin.import_tasks:
+        file: install_nginx.yml
+      when: >-
+        nginx_configure_args_hash_result is changed
+          or rebuild is true
+
+    - name: Checking nginx service status
+      ansible.builtin.service:
+        name: nginx
+        state: started
+
+  rescue:
+    - name: Prepare install nginx
+      ansible.builtin.import_tasks:
+        file: prepare_nginx.yml
+
+    - name: Install nginx
+      ansible.builtin.import_tasks:
+        file: install_nginx.yml
+
+  always:
+    - name: Config nginx
+      ansible.builtin.import_tasks:
+        file: config_nginx.yml
