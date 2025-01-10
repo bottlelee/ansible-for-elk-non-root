@@ -1,3 +1,4 @@
+---
 - name: Enroll new kibana into the cluster
   block:
     - name: Import config tasks
@@ -5,8 +6,8 @@
         name: config_{{ elk_role }}
 
     - name: Get enrollment token
-      import_tasks:
-        file:  enrollment_token.yml
+      ansible.builtin.import_tasks:
+        file: enrollment_token.yml
       vars:
         enrollment_scope: kibana
 
@@ -14,8 +15,8 @@
       ansible.builtin.command:
         argv:
           - "{{ elk_install_dir }}/kibana/bin/kibana-setup"
-          - "--silent"
-          - "--enrollment-token"
+          - --silent
+          - --enrollment-token
           - "{{ elk_enrollment_token }}"
       changed_when: false
       register: enrollment_status
