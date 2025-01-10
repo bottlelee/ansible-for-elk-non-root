@@ -1,4 +1,5 @@
-files/*
+playbooks/files/*
 credentials
 .vagrant
-inventories/uat/files/*
+inventories/*/files/*
+ansible-docker/*.tar*
