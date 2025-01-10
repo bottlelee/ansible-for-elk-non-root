@@ -12,13 +12,13 @@
 
 - name: Adjust Permissions with polkit
   ansible.builtin.template:
-    src: polkit.rules.j2
-    dest: /etc/polkit-1/rules.d/90-elk.rules
+    src: systemd/polkit.rules.j2
+    dest: /etc/polkit-1/rules.d/99-{{ elk_role }}.rules
     mode: "0644"
     backup: true
   notify: Restart polkit
 
-- name: Create/update /etc/systemd/system/{{ elk_role }}.service
+- name: Create/update /etc/systemd/system/{{ elk_role + '.service' }}
   ansible.builtin.template:
     src: "{{ service_template }}"
     dest: /etc/systemd/system/{{ elk_role }}.service
@@ -26,7 +26,7 @@
     owner: "{{ elk_user }}"
     group: "{{ elk_group }}"
   with_fileglob:
-    - "{{ role_path }}/templates/{{ elk_role }}.service.j2"
+    - "{{ playbook_dir }}/templates/systemd/{{ elk_role }}.service.j2"
   loop_control:
     loop_var: service_template
 
