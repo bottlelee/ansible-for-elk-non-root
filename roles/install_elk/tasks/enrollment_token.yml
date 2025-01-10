@@ -1,9 +1,9 @@
 ---
 - name: Check local enrollment token file
   ansible.builtin.stat:
-    path: "{{ inventory_dir }}/files/enrollment-token"
+    path: "{{ inventory_dir }}/files/enrollment-token-{{ enrollment_scope }}"
   register: local_enrollment_token
-  delegate_to: "{{ elasticsearch_bootstrap_host }}"
+  delegate_to: localhost
   when: elk_enrollment_token is not defined
 
 - name: Calculate time differ
@@ -12,12 +12,12 @@
       {{
         (ansible_date_time.epoch | int)
           -
-        (local_enrollment_token.stat.mtime | default(0) | int)
+        (local_enrollment_token.stat.mtime | default('0') | int)
       }}
 
 - name: Read enrollment token
   ansible.builtin.set_fact:
-    elk_enrollment_token: "{{ lookup('file', '{{ inventory_dir }}/files/enrollment-token') }}"
+    elk_enrollment_token: "{{ lookup('file', '{{ inventory_dir }}/files/enrollment-token-' + enrollment_scope ) }}"
   when:
     - local_enrollment_token.stat.exists
     - (time_differ | int) < 900 # Fresh token in 15 minutes
@@ -27,12 +27,14 @@
     - (time_differ | int) > 900 # Old token more than 15 minutes
 
   block:
-    - name: Create enrollment token for node scope
+    - name: "Create enrollment token for {{ enrollment_token }}"
       ansible.builtin.command:
         argv:
           - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-create-enrollment-token"
-          - --scope
-          - node
+          - "--scope"
+          - "{{ enrollment_scope }}"
+          - "--url"
+          - "https://{{ keepalived}}"
       changed_when: false
       register: enrollment_token
       delegate_to: "{{ elasticsearch_bootstrap_host }}"
@@ -47,7 +49,7 @@
     - name: Save new enrollment token
       ansible.builtin.copy:
         content: "{{ enrollment_token.stdout }}"
-        dest: "{{ inventory_dir }}/files/enrollment-token"
+        dest: "{{ inventory_dir }}/files/enrollment-token-{{ enrollment_scope }}"
         mode: "0600"
       delegate_to: localhost
       become: false
@@ -59,3 +61,6 @@
 - name: Print enrollment token
   ansible.builtin.debug:
     var: elk_enrollment_token
+  when:
+    - local_enrollment_token.stat.exists
+    - (time_differ | int) < 900 # Fresh token in 15 minutes

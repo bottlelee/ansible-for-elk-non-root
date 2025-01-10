@@ -1,0 +1,35 @@
+- name: Enroll new kibana into the cluster
+  block:
+    - name: Import config tasks
+      ansible.builtin.include_role:
+        name: config_{{ elk_role }}
+
+    - name: Get enrollment token
+      import_tasks:
+        file:  enrollment_token.yml
+      vars:
+        enrollment_scope: kibana
+
+    - name: Enroll node '{{ inventory_hostname | default(ansible_host) }}'
+      ansible.builtin.command:
+        argv:
+          - "{{ elk_install_dir }}/kibana/bin/kibana-setup"
+          - "--silent"
+          - "--enrollment-token"
+          - "{{ elk_enrollment_token }}"
+      changed_when: false
+      register: enrollment_status
+
+    - name: Wait for node to be started
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: "{{ kibana_config['http.port'] | default('5601') }}"
+        timeout: 300
+
+  rescue:
+    - name: Skip security auto config
+      ansible.builtin.debug:
+        msg: "{{ enrollment_token.stderr }}"
+      when:
+        - enrollment_token.stderr is defined
+        - "'Skipping security auto config' in enrollment_token.stderr"

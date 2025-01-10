@@ -39,7 +39,6 @@
     - name: Print tips
       ansible.builtin.debug:
         msg: Downloading from {{ elk_package_url }}, please wait...
-      run_once: true
 
     - name: Downloading...
       ansible.builtin.get_url:

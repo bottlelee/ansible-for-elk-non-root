@@ -1,0 +1,48 @@
+---
+- name: Bootstrap elasticsearch
+  delegate_to: "{{ elasticsearch_bootstrap_host }}"
+  when:
+    - elasticsearch_bootstrap_enabled or elasticsearch_force_bootstrap
+    - ansible_host == elasticsearch_bootstrap_host
+  block:
+    - name: Bootstrap elasticsearch
+      ansible.builtin.import_tasks:
+        file: bootstrap_elasticsearch.yml
+
+- name: Checking if node is already enrolled
+  ansible.builtin.uri:
+    url: https://{{ elasticsearch_bootstrap_host }}:{{ elasticsearch_http_port }}/_cat/nodes?pretty
+    url_username: elastic
+    url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
+    force_basic_auth: true
+    validate_certs: false
+    return_content: true
+  register: cluster_nodes
+
+- name: Enroll new nodes into the cluster
+  ansible.builtin.include_tasks:
+    file: "{{ task_file }}"
+  with_items:
+    - enrollment_token.yml
+    - enroll_new_nodes.yml
+  vars:
+    enrollment_scope: node
+  loop_control:
+    loop_var: task_file
+  when:
+    - elasticsearch_bootstrap_host not in ansible_all_ipv4_addresses
+    - ansible_host not in cluster_nodes.content
+
+- name: Re-check if node is already enrolled
+  ansible.builtin.uri:
+    url: https://{{ elasticsearch_bootstrap_host }}:{{ elasticsearch_http_port }}/_cat/nodes?pretty
+    url_username: elastic
+    url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
+    force_basic_auth: true
+    validate_certs: false
+    return_content: true
+  register: cluster_nodes
+
+- name: Print cluster nodes list
+  ansible.builtin.debug:
+    msg: "{{ cluster_nodes.content }}"
