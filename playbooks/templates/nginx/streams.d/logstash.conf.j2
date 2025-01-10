@@ -1,0 +1,11 @@
+upstream logstash {
+    least_conn;
+{% for host in groups['logstash'] %}
+    server {{ hostvars[host]['ansible_host'] }}:5044;
+{% endfor %}
+}
+
+server {
+    listen 15044;
+    proxy_pass logstash;
+}

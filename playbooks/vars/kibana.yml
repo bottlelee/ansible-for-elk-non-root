@@ -1,0 +1,16 @@
+kibana_config:
+  server.port: 5601
+  server.host: "0.0.0.0"
+  server.name: "{{ inventory_hostname | default(ansible_hostname) }}"
+  elasticsearch.requestTimeout: 90000
+  logging.appenders.default:
+    type: rolling-file
+    fileName: "{{ elk_logs_dir }}/kibana/kibana.log"
+    policy:
+      type: size-limit
+      size: 256mb
+    strategy:
+      type: numeric
+      max: 10
+    layout:
+      type: json

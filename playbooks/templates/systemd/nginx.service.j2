@@ -1,0 +1,18 @@
+[Unit]
+Description=A high performance web server and a reverse proxy server
+After=network-online.target
+
+[Service]
+User={{ elk_user }}
+Group={{ elk_group }}
+
+Type=forking
+PIDFile={{ elk_logs_dir }}/nginx/nginx.pid
+ExecStartPre={{ elk_install_dir }}/nginx/sbin/nginx -t
+ExecStart={{ elk_install_dir }}/nginx/sbin/nginx
+ExecReload={{ elk_install_dir }}/nginx/sbin/nginx -s reload
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

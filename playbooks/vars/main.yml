@@ -1,0 +1,27 @@
+---
+# Basic info
+elk_version: 8.13.4
+elk_user: vagrant
+elk_group: vagrant
+
+# Directories
+elk_base_dir: /home/{{ elk_user }}/elk
+elk_install_dir: "{{ elk_base_dir }}/apps"
+elk_data_dir: "{{ elk_base_dir }}/data"
+elk_logs_dir: "{{ elk_base_dir }}/logs"
+elk_pkgs_dir: "{{ elk_base_dir }}/pkgs"
+elk_build_dir: "{{ elk_base_dir }}/srcs"
+
+# Cluster info
+elk_domain_name: elk.local
+elk_cluster_name: elk-cluster
+
+# Local files location
+elk_local_package_path: "{{ playbook_dir }}/files/downloads"
+elk_local_certs_path: "{{ inventory_path }}/credentials/certs"
+
+# Certificates from `elk_local_certs_path`
+elk_cert_http_ca: http_ca.crt
+elk_cert_http: http.p12
+elk_cert_transport: transport.p12
+elk_cert_ca_cert: elastic-stack-ca.p12

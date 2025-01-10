@@ -1,0 +1,20 @@
+keepalived_configure_args:
+  - "--prefix={{ elk_install_dir }}/keepalived"
+  - "--enable-log-file"
+  - "--enable-json"
+
+keepalived_configure_args_hash: "{{ keepalived_configure_args | sort | hash('sha256') }}"
+
+keepalived_vrrp_instances:
+  - name: "NGINX"
+    master: "{{ groups['nginx'][0] }}"
+    interface: "eth1"
+    virtual_ipaddress: "192.168.56.100"
+    unicast_src_ip: "192.168.56.101"
+    check_script: "/bin/pidof nginx" # Must be an absolute path
+
+keepalived_dependencies:
+  yum:
+    - gcc
+    - openssl-devel
+    - make

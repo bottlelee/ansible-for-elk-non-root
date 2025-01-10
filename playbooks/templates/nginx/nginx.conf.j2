@@ -1,4 +1,4 @@
-user  {{ elk_user }};
+#user  {{ elk_user }};
 worker_processes  auto;
 worker_rlimit_nofile 65535;
 
@@ -10,16 +10,15 @@ events {
     worker_connections  1024;
 }
 
-
 http {
-    include       mime.types;
+    include       {{ elk_install_dir }}/nginx/conf/mime.types;
     default_type  application/octet-stream;
 
     #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
     #                  '$status $body_bytes_sent "$http_referer" '
     #                  '"$http_user_agent" "$http_x_forwarded_for"';
 
-    access_log  {{ elk_logs_dir }}/nginx/access.log  main;
+    access_log  {{ elk_logs_dir }}/nginx/access.log;
 
     sendfile        on;
     tcp_nopush     on;
@@ -28,7 +27,9 @@ http {
 
     gzip  on;
 
-    include /etc/nginx/conf.d/*.conf;
+    include {{ elk_install_dir }}/nginx/sites.d/*.conf;
 }
 
-include /etc/nginx/stream.d/*.conf;
+stream {
+    include {{ elk_install_dir }}/nginx/streams.d/*.conf;
+}

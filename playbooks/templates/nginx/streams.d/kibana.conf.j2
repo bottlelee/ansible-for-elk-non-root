@@ -1,0 +1,11 @@
+upstream kibana {
+    least_conn;
+{% for host in groups['kibana'] %}
+    server {{ hostvars[host]['ansible_host'] }}:{{ kibana_config['server.port'] }};
+{% endfor %}
+}
+
+server {
+    listen {{ (kibana_config['server.port'] | int) + 10000 }};
+    proxy_pass kibana;
+}

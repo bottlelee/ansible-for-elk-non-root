@@ -1,0 +1,20 @@
+---
+- name: Gather all nodes facts
+  hosts: all
+  become: false
+  gather_facts: false
+  run_once: true
+  roles:
+    - role: pre_tasks
+      tags: always
+
+- name: Install nginx and keepalived
+  hosts: nginx
+  become: false
+  gather_facts: false
+  serial: 1
+  roles:
+    - role: nginx
+      tags: nginx
+    - role: keepalived
+      tags: keepalived

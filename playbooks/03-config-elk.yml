@@ -3,30 +3,22 @@
   hosts: all
   become: false
   gather_facts: false
+  run_once: true
   roles:
     - role: pre_tasks
-      run_once: true
 
-- name: Install ELK cluster
+- name: Config ELK
   hosts: elasticsearch:kibana:logstash
+  serial: 1
   become: false
   gather_facts: false
-  serial: 1
   roles:
-    - role: install_elk
-      vars:
-        elk_role: elasticsearch
+    - role: config_elasticsearch
+      tags: elasticsearch
       when: "'elasticsearch' in group_names"
-
-    - role: install_nginx
-      when: "'nginx' in group_names"
-
-    - role: install_elk
-      vars:
-        elk_role: kibana
+    - role: config_kibana
+      tags: kibana
       when: "'kibana' in group_names"
-
-    - role: install_elk
-      vars:
-        elk_role: logstash
+    - role: config_logstash
+      tags: logstash
       when: "'logstash' in group_names"
