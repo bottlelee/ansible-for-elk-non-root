@@ -1,3 +1,8 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # handlers file for config_kibana
+
+- name: Restart kibana
+  ansible.builtin.service:
+    name: kibana
+    state: restarted
