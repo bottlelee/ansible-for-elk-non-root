@@ -11,14 +11,11 @@
 - name: Import variables
   ansible.builtin.include_vars: "{{ item }}"
   with_fileglob:
-    - vars/*.yml
-    - vars/*.yaml
-    - "{{ playbook_dir }}/../vars/*.yml"
-    - "{{ playbook_dir }}/../vars/*.yaml"
+    - "{{ playbook_dir }}/vars/*.yml"
     - "{{ inventory_dir }}/vars/*.yml"
-    - "{{ inventory_dir }}/vars/*.yaml"
 
 - name: Check cluster status
   ansible.builtin.import_tasks:
     file: check_cluster_status.yml
   run_once: true
+  when: "'elasticsearch' in group_names"
