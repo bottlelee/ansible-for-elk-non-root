@@ -14,6 +14,10 @@
     - "{{ playbook_dir }}/vars/*.yml"
     - "{{ inventory_dir }}/vars/*.yml"
 
+- name: Set some runtime variables
+  ansible.builtin.set_fact:
+    nginx_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'equalto', 'NGINX') | map(attribute='virtual_ipaddress') | first }}"
+
 - name: Check cluster status
   ansible.builtin.import_tasks:
     file: check_cluster_status.yml
