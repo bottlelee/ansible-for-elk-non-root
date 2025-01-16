@@ -1,3 +1,4 @@
+# This is a docker-compose file for Semaphore with semaphore user
 services:
   semaphore:
     ports:
@@ -5,7 +6,7 @@ services:
     image: semaphore
     container_name: semaphore
     hostname: semaphore
-    restart: always
+    restart: unless-stopped
     build:
       context: .
     environment:
@@ -14,15 +15,18 @@ services:
       SEMAPHORE_ADMIN_PASSWORD: P@ssw0rd
       SEMAPHORE_ADMIN_NAME: Admin
       SEMAPHORE_ADMIN_EMAIL: haibin.li@technet.com.mo
+      SEMAPHORE_DB_PATH: /home/semaphore/data
+      SEMAPHORE_CONFIG_PATH: /home/semaphore/config
       TZ: Asia/Shanghai
+    user: "1000"
     volumes:
-      - semaphore_data:/var/lib/semaphore
-      - semaphore_config:/etc/semaphore
-      - semaphore_tmp:/tmp/semaphore
-      - ../:/workdir
+      - semaphore_config:/home/semaphore/config
+      - semaphore_data:/home/semaphore/data
+      - semaphore_tmp:/home/semaphore/tmp
+      - $PWD/../:/workdir
     working_dir: /workdir
 
 volumes:
-  semaphore_data:
   semaphore_config:
+  semaphore_data:
   semaphore_tmp:
