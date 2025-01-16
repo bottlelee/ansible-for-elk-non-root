@@ -13,20 +13,32 @@
     label: "{{ package.value | basename }}"
   when: package.key == elk_role
 
-- name: Import install tasks
-  ansible.builtin.import_tasks:
-    file: install.yml
+- name: Install {{ elk_role }}
+  block:
+    - name: Checking service status
+      ansible.builtin.service:
+        name: "{{ elk_role }}"
+        state: started
 
-- name: Import config tasks
-  ansible.builtin.include_role:
-    name: config_{{ elk_role }}
+    - name: Import config tasks
+      ansible.builtin.include_role:
+        name: config_{{ elk_role }}
 
-- name: Tasks for group "'elasticsearch'
-  when: "'elasticsearch' in group_names"
-  ansible.builtin.import_tasks:
-    file: elasticsearch.yml
+  rescue:
+    - name: Import install tasks
+      ansible.builtin.import_tasks:
+        file: install.yml
 
-- name: Tasks for group "'kibana'
-  when: "'kibana' in group_names"
-  ansible.builtin.import_tasks:
-    file: kibana.yml
+    - name: Import config tasks
+      ansible.builtin.include_role:
+        name: config_{{ elk_role }}
+
+    - name: Tasks for group "'elasticsearch'
+      when: "'elasticsearch' in group_names"
+      ansible.builtin.import_tasks:
+        file: elasticsearch.yml
+
+    - name: Tasks for group "'kibana'
+      when: "'kibana' in group_names"
+      ansible.builtin.import_tasks:
+        file: kibana.yml

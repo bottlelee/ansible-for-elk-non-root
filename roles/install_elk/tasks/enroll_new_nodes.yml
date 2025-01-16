@@ -20,7 +20,7 @@
     - name: Wait for node to be started
       ansible.builtin.wait_for:
         host: "{{ ansible_host }}"
-        port: 9200
+        port: "{{ custom_port | default(elasticsearch_http_port) }}"
         timeout: 300
 
   rescue:

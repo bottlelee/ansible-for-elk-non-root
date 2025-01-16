@@ -70,6 +70,8 @@
     path: /etc/hosts
     block: |-
       {% for host in (groups['all'] | sort) %}
-      {{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}.{{ elk_domain_name }}
+      {{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}.{{ elk_domain }}
       {% endfor %}
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
     backup: true

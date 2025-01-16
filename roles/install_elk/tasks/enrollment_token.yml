@@ -27,14 +27,12 @@
     - (time_differ | int) > 900 # Old token more than 15 minutes
 
   block:
-    - name: Create enrollment token for {{ enrollment_token }}
+    - name: Create enrollment token for {{ enrollment_scope }}
       ansible.builtin.command:
         argv:
           - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-create-enrollment-token"
           - --scope
           - "{{ enrollment_scope }}"
-          - --url
-          - https://{{ keepalived }}
       changed_when: false
       register: enrollment_token
       delegate_to: "{{ elasticsearch_bootstrap_host }}"
@@ -46,7 +44,7 @@
         mode: "0700"
       delegate_to: localhost
 
-    - name: Save new enrollment token
+    - name: Save new enrollment token for {{ enrollment_scope }}
       ansible.builtin.copy:
         content: "{{ enrollment_token.stdout }}"
         dest: "{{ inventory_dir }}/files/enrollment-token-{{ enrollment_scope }}"

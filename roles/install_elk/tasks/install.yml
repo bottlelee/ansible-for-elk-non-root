@@ -28,6 +28,29 @@
         dest: "{{ elk_install_dir }}/{{ elk_role }}"
         state: link
 
+    - name: Remove unused paths
+      ansible.builtin.file:
+        path: "{{ remove_path }}"
+        state: absent
+      with_items:
+        - "{{ elk_install_dir }}/{{ elk_role }}-{{ elk_version }}/data"
+        - "{{ elk_install_dir }}/{{ elk_role }}-{{ elk_version }}/logs"
+      loop_control:
+        loop_var: remove_path
+
+    - name: Create soft link under {{ elk_install_dir + '/' + elk_role }}
+      ansible.builtin.file:
+        src: "{{ link_path.src }}"
+        dest: "{{ link_path.dest }}"
+        state: link
+      with_items:
+        - src: "{{ elk_data_dir }}/{{ elk_role }}"
+          dest: "{{ elk_install_dir }}/{{ elk_role }}-{{ elk_version }}/data"
+        - src: "{{ elk_logs_dir }}/{{ elk_role }}"
+          dest: "{{ elk_install_dir }}/{{ elk_role }}-{{ elk_version }}/logs"
+      loop_control:
+        loop_var: link_path
+
   rescue:
     - name: Create local packages path under {{ elk_local_package_path }}
       ansible.builtin.file:

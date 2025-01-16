@@ -1,9 +1,99 @@
 ---
-- name: Enroll new kibana into the cluster
+- name: Enable HTTPS for Kibana
   block:
-    - name: Import config tasks
-      ansible.builtin.include_role:
-        name: config_{{ elk_role }}
+    - name: Create kibana certs directory
+      ansible.builtin.file:
+        path: "{{ elk_install_dir }}/kibana/config/certs"
+        state: directory
+        mode: "0750"
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+
+    - name: Create a temporary directory temp
+      ansible.builtin.tempfile:
+        state: directory
+      register: temp_dir
+
+    - name: Upload kibana certs
+      ansible.builtin.unarchive:
+        src: "{{ inventory_dir }}/credentials/kibana/kibana-{{ elk_env }}.zip"
+        dest: "{{ temp_dir.path }}"
+
+    - name: Copy cert files to kibana certs directory
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ temp_dir.path }}/kibana-{{ elk_cluster_name }}/{{ item }}"
+        dest: "{{ elk_install_dir }}/kibana/config/certs/"
+      with_items:
+        - kibana-{{ elk_cluster_name }}.csr
+        - kibana-{{ elk_cluster_name }}.key
+
+    - name: Clear temp directory
+      ansible.builtin.file:
+        path: "{{ temp_dir.path }}"
+        state: absent
+
+  rescue:
+    - name: Create local path
+      ansible.builtin.file:
+        path: "{{ inventory_dir }}/credentials/kibana"
+        state: directory
+        mode: "0700"
+      become: false
+      delegate_to: localhost
+
+    - name: Generate kibana certs
+      ansible.builtin.command:
+        argv:
+          - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-certutil"
+          - csr
+          - --silent
+          - --dns
+          - kibana.{{ elk_domain }}
+          - --name
+          - kibana-{{ elk_cluster_name }}
+          - --out
+          - "{{ elk_install_dir }}/elasticsearch/config/certs/kibana-{{ elk_env }}.zip"
+        creates: "{{ elk_install_dir }}/elasticsearch/config/certs/kibana-{{ elk_env }}.zip"
+      delegate_to: "{{ elasticsearch_bootstrap_host }}"
+
+    - name: Fetch kibana certs
+      ansible.builtin.fetch:
+        src: "{{ elk_install_dir }}/elasticsearch/config/certs/kibana-{{ elk_env }}.zip"
+        dest: "{{ inventory_dir }}/credentials/kibana/"
+        backup: true
+        flat: true
+      delegate_to: "{{ elasticsearch_bootstrap_host }}"
+
+    - name: Repeat tasks
+      ansible.builtin.include_tasks: kibana.yml
+- name: Check if kibana is already enrolled
+  ansible.builtin.find:
+    paths: "{{ elk_install_dir }}/kibana/config/"
+    patterns: ^.*\.yml$
+    contains: serviceAccountToken
+    read_whole_file: true
+  register: enrollment_config
+
+- name: Enroll new kibana into the cluster
+  when: enrollment_config.files is falsy
+  block:
+    - name: Backup kibana config
+      ansible.builtin.copy:
+        src: "{{ elk_install_dir }}/kibana/config/kibana.yml"
+        dest: "{{ elk_install_dir }}/kibana/config/.kibana.yml.{{ ansible_date_time.iso8601_basic_short }}"
+        remote_src: true
+
+    - name: Update kibana config backup link
+      ansible.builtin.file:
+        src: "{{ elk_install_dir }}/kibana/config/.kibana.yml.{{ ansible_date_time.iso8601_basic_short }}"
+        dest: "{{ elk_install_dir }}/kibana/config/kibana.yml.bak"
+        state: link
+
+    - name: Truncate kibana config
+      ansible.builtin.copy:
+        content: ""
+        dest: "{{ elk_install_dir }}/kibana/config/kibana.yml"
 
     - name: Get enrollment token
       ansible.builtin.import_tasks:
@@ -20,6 +110,13 @@
           - "{{ elk_enrollment_token }}"
       changed_when: false
       register: enrollment_status
+
+    - name: Import config tasks
+      ansible.builtin.include_role:
+        name: config_{{ elk_role }}
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
 
     - name: Wait for node to be started
       ansible.builtin.wait_for:
