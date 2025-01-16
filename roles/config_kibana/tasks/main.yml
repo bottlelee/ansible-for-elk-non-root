@@ -1,7 +1,6 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for config_kibana
-
 - name: Update kibana.yml
   ansible.builtin.blockinfile:
     path: "{{ elk_install_dir }}/kibana/config/kibana.yml"
