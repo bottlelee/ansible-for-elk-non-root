@@ -6,6 +6,7 @@
   run_once: true
   roles:
     - role: pre_tasks
+      tags: always
 
 - name: Install ELK cluster
   hosts: elasticsearch:kibana:logstash
@@ -21,6 +22,7 @@
     - role: install_elk
       vars:
         elk_role: kibana
+      tags: kibana
       when: "'kibana' in group_names"
 
     - role: install_elk

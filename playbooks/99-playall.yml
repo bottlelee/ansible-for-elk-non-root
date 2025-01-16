@@ -10,3 +10,6 @@
 
 - name: Config ELK
   ansible.builtin.import_playbook: 03-config-elk.yml
+
+- name: Deploy/config minio
+  ansible.builtin.import_playbook: 04-minio.yml

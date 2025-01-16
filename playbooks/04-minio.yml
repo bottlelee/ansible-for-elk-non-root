@@ -1,0 +1,8 @@
+---
+- name: Deploy/config minio
+  hosts: minio
+  become: true
+  roles:
+    - role: pre_tasks
+      run_once: true
+    - role: minio

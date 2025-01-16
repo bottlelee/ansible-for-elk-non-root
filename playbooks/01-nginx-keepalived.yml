@@ -16,5 +16,6 @@
   roles:
     - role: nginx
       tags: nginx
+
     - role: keepalived
       tags: keepalived
