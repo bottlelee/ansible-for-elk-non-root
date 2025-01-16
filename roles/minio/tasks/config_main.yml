@@ -1,0 +1,64 @@
+---
+- name: Create /etc/default/minio
+  ansible.builtin.template:
+    src: minio/minio_default_vars.j2
+    dest: /etc/default/minio
+    owner: minio-user
+    group: minio-user
+    mode: "0644"
+    backup: true
+  notify: Restart minio
+
+- name: Get minio login cookies
+  ansible.builtin.uri:
+    url: "{{ minio_api_prefix }}/login"
+    method: POST
+    body_format: json
+    body: |
+      {
+        "accessKey": "{{ minio_root_user }}",
+        "secretKey": "{{ minio_root_pass }}"
+      }
+    status_code: 204
+  register: minio_login_cookies
+
+- name: Manage access keys
+  block:
+    - name: Get access keys list
+      ansible.builtin.uri:
+        url: "{{ minio_api_prefix }}/service-accounts"
+        method: GET
+        return_content: true
+        headers:
+          Cookie: "{{ minio_login_cookies.cookies_string }}"
+      register: service_accounts
+
+    - name: Create/update access keys
+      ansible.builtin.include_tasks:
+        file: config_accounts.yml
+      loop: "{{ minio_objects }}"
+      loop_control:
+        loop_var: account
+        label: "{{ account.name }}"
+      vars:
+        account_access_key: "{{ lookup('password', inventory_dir + '/credentials/minio/' + account.name + '_accessKey length=20 chars=ascii_letters,digits') }}"
+        account_secret_key: "{{ lookup('password', inventory_dir + '/credentials/minio/' + account.name + '_secretKey length=40 chars=ascii_letters,digits') }}"
+
+- name: Manage buckets
+  block:
+    - name: Get buckets list
+      ansible.builtin.uri:
+        url: "{{ minio_api_prefix }}/buckets"
+        method: GET
+        return_content: true
+        headers:
+          Cookie: "{{ minio_login_cookies.cookies_string }}"
+      register: buckets_list
+
+    - name: Create/update bucket
+      ansible.builtin.include_tasks:
+        file: config_buckets.yml
+      loop: "{{ minio_objects }}"
+      loop_control:
+        loop_var: bucket
+        label: "{{ bucket.name }}"

@@ -1,0 +1,16 @@
+---
+- name: Create bucket '{{ bucket.name }}'
+  ansible.builtin.uri:
+    url: "{{ minio_api_prefix }}/buckets"
+    method: POST
+    return_content: true
+    body_format: json
+    headers:
+      Cookie: "{{ minio_login_cookies.cookies_string }}"
+      Content-Type: application/json
+    body: |
+      {{ lookup('template', 'bucket.json.j2') }}
+  register: create_bucket
+  when:
+    - not (buckets_list.json.buckets | regex_search(bucket.name))
+  changed_when: create_bucket.status == 201

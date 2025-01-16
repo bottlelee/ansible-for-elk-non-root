@@ -1,0 +1,32 @@
+---
+- name: Create access key '{{ account.name }}'
+  ansible.builtin.uri:
+    url: "{{ minio_api_prefix }}/service-account-credentials"
+    method: POST
+    return_content: true
+    body_format: json
+    headers:
+      Cookie: "{{ minio_login_cookies.cookies_string }}"
+      Content-Type: application/json
+    body: |
+      {{ lookup('template', 'create_account_key.json.j2') }}
+    status_code:
+      - 201
+  register: service_account_credentials
+  when:
+    - not (service_accounts.json | regex_search(account_access_key))
+  changed_when: service_account_credentials.status == 201
+
+- name: Update access key '{{ account.name }}'
+  ansible.builtin.uri:
+    url: "{{ minio_api_prefix }}/service-accounts/{{ account_access_key }}"
+    method: PUT
+    return_content: true
+    body_format: json
+    headers:
+      Cookie: "{{ minio_login_cookies.cookies_string }}"
+      Content-Type: application/json
+    body: |
+      {{ lookup('template', 'update_account_key.json.j2') }}
+  when:
+    - service_accounts.json | regex_search(account_access_key)

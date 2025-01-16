@@ -1,0 +1,20 @@
+---
+- name: Create partions on {{ device }}
+  community.general.parted:
+    device: "{{ device }}"
+    number: 1
+    state: present
+    fs_type: xfs
+
+- name: Create XFS filesystem on {{ device }}
+  community.general.filesystem:
+    fstype: xfs
+    dev: "{{ device }}1"
+
+- name: Mount device to {{ minio_mountpoint_root }}/data{{ ansible_loop.index }}
+  ansible.posix.mount:
+    path: "{{ minio_mountpoint_root }}/data{{ ansible_loop.index }}"
+    src: "{{ device }}1"
+    fstype: xfs
+    state: mounted
+    opts: noatime

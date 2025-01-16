@@ -1,0 +1,28 @@
+---
+# tasks file for minio
+- name: Deploy/config minio
+  block:
+    - name: Check if minio is already installed
+      ansible.builtin.service:
+        name: minio
+        state: started
+
+  rescue:
+    - name: Config storages
+      ansible.builtin.include_tasks:
+        file: storages.yml
+      loop: "{{ minio_devices }}"
+      loop_control:
+        loop_var: device
+        extended: true
+
+    - name: Install minio
+      ansible.builtin.import_tasks:
+        file: install.yml
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
+- name: Config minio
+  ansible.builtin.import_tasks:
+    file: config_main.yml

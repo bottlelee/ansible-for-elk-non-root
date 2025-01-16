@@ -1,0 +1,7 @@
+{
+    "description": "{{ account.access_key.description | default('') }}",
+    "expiry": "{{ account.access_key.expiry | default('') }}",
+    "name": "{{ account.name | upper }}",
+    "status": "{{ account.access_key.status | default('on') }}",
+    "policy": "{{ account.access_key.policy | default('') }}"
+}

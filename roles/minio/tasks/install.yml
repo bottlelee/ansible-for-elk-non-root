@@ -1,0 +1,67 @@
+---
+- name: Install MinIO
+  block:
+    - name: Upload MinIO package
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/files/minio/{{ minio_package_url | basename }}"
+        dest: /tmp/{{ minio_package_url | basename }}
+
+    - name: Install MinIO package
+      ansible.builtin.dnf:
+        name: /tmp/{{ minio_package_url | basename }}
+        disable_gpg_check: true
+      when: ansible_pkg_mgr == 'yum'
+      notify: Restart minio
+
+    - name: Install MinIO package
+      ansible.builtin.dnf:
+        name: /tmp/{{ minio_package_url | basename }}
+        disable_gpg_check: true
+      when: ansible_pkg_mgr == 'dnf'
+      notify: Restart minio
+
+    - name: Install MinIO package
+      ansible.builtin.apt:
+        name: /tmp/{{ minio_package_url | basename }}
+        allow_unauthenticated: true
+      when: ansible_pkg_mgr == 'apt'
+      notify: Restart minio
+
+    - name: Add user 'minio-user'
+      ansible.builtin.user:
+        name: minio-user
+
+    - name: Grant mountpoint access to minio-user
+      ansible.builtin.file:
+        path: "{{ minio_mountpoint_root }}"
+        owner: minio-user
+        group: minio-user
+        recurse: true
+
+    - name: Create /etc/default/minio
+      ansible.builtin.template:
+        src: minio/minio_default_vars.j2
+        dest: /etc/default/minio
+        owner: minio-user
+        group: minio-user
+        mode: "0644"
+        backup: true
+      notify: Restart minio
+
+  rescue:
+    - name: Create local path '{{ playbook_dir }}/files/minio/'
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/files/minio/"
+        state: directory
+      become: false
+      delegate_to: localhost
+
+    - name: Downloading {{ minio_package_url }}
+      ansible.builtin.get_url:
+        url: "{{ minio_package_url }}"
+        dest: "{{ playbook_dir }}/files/minio/{{ minio_package_url | basename }}"
+      become: false
+      delegate_to: localhost
+
+    - name: Repeat tasks
+      ansible.builtin.include_tasks: install.yml
