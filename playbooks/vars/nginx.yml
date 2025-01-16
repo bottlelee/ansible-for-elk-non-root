@@ -1,5 +1,45 @@
 ---
-nginx_configure_args:
+nginx_sites:
+  - name: elasticsearch
+    listen_port: 19200
+    server_name: elasticsearch
+    location: /
+    upstreams: "{{ groups['elasticsearch'] }}"
+    upstream_port: 9200
+    upstream_method: least_conn
+    proxy_ssl_verify: off
+    proxy_protocol: https
+
+  - name: kibana
+    listen_port: 80
+    server_name: kibana
+    location: /
+    upstreams: "{{ groups['kibana'] }}"
+    upstream_port: 5601
+    upstream_method: least_conn
+    proxy_ssl_verify: o
+    proxy_protocol: https
+
+  - name: fleet-server
+    listen_port: 18220
+    server_name: fleet-server
+    location: /
+    upstreams: "{{ groups['fleet-server'] }}"
+    upstream_port: 8220
+    upstream_method: least_conn
+    proxy_ssl_verify: off
+    proxy_protocol: http
+
+nginx_streams:
+  - name: logstash
+    listen_port: 15044
+    server_name: logstash
+    upstreams: "{{ groups['logstash'] }}"
+    upstream_port: 5044
+    upstream_method: least_conn
+    proxy_ssl_verify: off
+
+nginx_compile_args:
   - --prefix={{ elk_install_dir }}/nginx
   - --with-http_ssl_module
   - --with-http_v2_module
@@ -12,4 +52,10 @@ nginx_configure_args:
   - --with-poll_module
   - --http-log-path={{ elk_logs_dir }}/nginx/access.log
 
-nginx_configure_args_hash: "{{ nginx_configure_args | sort | hash('sha256') }}"
+nginx_compile_args_hash: "{{ nginx_compile_args | sort | hash('md5') }}"
+
+nginx_compile_tools:
+  - gcc
+  - pcre-devel
+  - zlib-devel
+  - openssl-devel

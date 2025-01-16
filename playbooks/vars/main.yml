@@ -13,8 +13,8 @@ elk_pkgs_dir: "{{ elk_base_dir }}/pkgs"
 elk_build_dir: "{{ elk_base_dir }}/srcs"
 
 # Cluster info
-elk_domain_name: elk.local
-elk_cluster_name: elk-cluster
+elk_domain: elk.local
+elk_cluster_name: "{{ elk_env }}-elk-cluster"
 
 # Local files location
 elk_local_package_path: "{{ playbook_dir }}/files/downloads"
