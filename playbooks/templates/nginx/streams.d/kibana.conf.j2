@@ -6,6 +6,6 @@ upstream kibana {
 }
 
 server {
-    listen {{ (kibana_config['server.port'] | int) + 10000 }};
+    listen 80;
     proxy_pass kibana;
 }

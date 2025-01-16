@@ -5,6 +5,7 @@ init_system_sysctl:
   vm.swappiness: 1
   vm.overcommit_memory: 1
   fs.file-max: 65536
+  net.ipv4.ip_unprivileged_port_start: 80 # Allow non-root users to use port 80 and above
 
 # Config user limits
 init_system_ulimit:

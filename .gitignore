@@ -3,3 +3,4 @@ credentials
 .vagrant
 inventories/*/files/*
 ansible-docker/*.tar*
+playbooks/test.yml

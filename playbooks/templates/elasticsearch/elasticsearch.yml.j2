@@ -18,7 +18,7 @@ xpack.security.enrollment.enabled: true
 
 cluster.initial_master_nodes:
 {% for host in groups['es_master'] %}
-  - {{ hostvars[host]['ansible_host'] }}
+  - {{ host }}.{{ elk_domain }}
 {% endfor %}
 
 # Allow HTTP API connections from anywhere
