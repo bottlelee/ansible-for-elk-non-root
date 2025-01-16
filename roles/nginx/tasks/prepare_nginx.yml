@@ -24,13 +24,8 @@
 
     - name: Install yum packages
       ansible.builtin.dnf:
-        name: "{{ item }}"
+        name: "{{ nginx_compile_tools }}"
         state: present
-      with_items:
-        - gcc
-        - pcre-devel
-        - zlib-devel
-        - openssl-devel
       when: ansible_pkg_mgr in ('yum', 'dnf')
       become: true
 

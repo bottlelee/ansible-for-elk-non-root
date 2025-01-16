@@ -6,18 +6,18 @@
   block:
     - name: Checking if nginx configure args has been changed
       ansible.builtin.copy:
-        content: "{{ nginx_configure_args_hash }}"
-        dest: "{{ inventory_dir }}/files/nginx_configure_args_hash"
+        content: "{{ nginx_compile_args_hash }}"
+        dest: "{{ inventory_dir }}/files/nginx_compile_args_hash"
         mode: "0640"
       delegate_to: localhost
-      register: nginx_configure_args_hash_result
+      register: nginx_compile_args_hash_result
       run_once: true
 
     - name: Install nginx
       ansible.builtin.import_tasks:
         file: install_nginx.yml
       when: >-
-        nginx_configure_args_hash_result is changed
+        nginx_compile_args_hash_result is changed
           or rebuild is true
 
     - name: Checking nginx service status

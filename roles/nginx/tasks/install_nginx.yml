@@ -1,12 +1,12 @@
 ---
 - name: Print nginx configure args
   ansible.builtin.debug:
-    msg: "{{ nginx_configure_args | sort }}"
+    msg: "{{ nginx_compile_args | sort }}"
 
 - name: Configure nginx make file
   ansible.builtin.command: >-
-    ./configure {{ nginx_configure_args | sort | join(' ') }}
-  changed_when: nginx_configure_args_hash_result is changed
+    ./configure {{ nginx_compile_args | sort | join(' ') }}
+  changed_when: nginx_compile_args_hash_result is changed
   args:
     chdir: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
   notify: Restart nginx
