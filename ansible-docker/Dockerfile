@@ -6,18 +6,8 @@ ARG SEMAPHORE_USER_ID=1000
 USER root
 
 RUN apk add --no-cache --upgrade fish htop byobu sshpass nano shadow tzdata wget \
-  openssh-client curl \
+  openssh-client curl gcc make zlib-dev libffi-dev openssl-dev musl-dev \
   && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-
-## Install build dependencies
-RUN apk add --no-cache \
-    wget \
-    gcc \
-    make \
-    zlib-dev \
-    libffi-dev \
-    openssl-dev \
-    musl-dev
 
 ## Download and extract Python source
 RUN cd /opt \
@@ -30,11 +20,33 @@ RUN cd /opt/Python-${PYTHON_VERSION} \
     && make install
 
 RUN chsh -s /usr/bin/fish semaphore \
-  && usermod -u ${SEMAPHORE_USER_ID} semaphore \
-  && chown -R ${SEMAPHORE_USER_ID}:0 /home/semaphore
+  && usermod -u ${SEMAPHORE_USER_ID} semaphore
 
+## Initialize the semaphore user
 FROM stage1 AS stage2
+
+ENV PATH=/home/semaphore/.local/bin:$PATH
+
+USER semaphore
+
+COPY ssh_config /home/semaphore/.ssh/config
+
+RUN pip3 install --user --no-cache-dir --upgrade pip \
+  && pip3 install --user --no-cache-dir netaddr pyyaml jmespath ansible \
+  pywinrm passlib requests docker
+
+RUN fish -c 'function pansible; ansible-playbook $argv; end; funcsave pansible' \
+  && mkdir -p ~/.config/fish/completions/ \
+  && fish -c 'semaphore completion fish > ~/.config/fish/completions/semaphore.fish' \
+  && mkdir -p /home/semaphore/data \
+    /home/semaphore/config \
+    /home/semaphore/tmp
+
 ## Cleanup
+FROM stage2 AS stage3
+
+USER root
+
 RUN rm -rf /opt/Python-${PYTHON_VERSION} /opt/Python-${PYTHON_VERSION}.tgz \
   && apk del \
     wget \
@@ -48,21 +60,3 @@ RUN rm -rf /opt/Python-${PYTHON_VERSION} /opt/Python-${PYTHON_VERSION}.tgz \
   && rm /var/cache/apk -rf
 
 RUN userdel -f root
-
-# Initialize the semaphore user
-FROM stage2 AS stage3
-
-ENV PATH=/home/semaphore/.local/bin:$PATH
-
-USER semaphore
-
-RUN pip3 install --user --no-cache-dir --upgrade pip \
-  && pip3 install --user --no-cache-dir netaddr pyyaml jmespath ansible \
-  pywinrm passlib requests docker
-
-RUN fish -c 'function pansible; ansible-playbook $argv; end; funcsave pansible' \
-  && mkdir -p ~/.config/fish/completions/ \
-  && fish -c 'semaphore completion fish > ~/.config/fish/completions/semaphore.fish' \
-  && mkdir -p /home/semaphore/data \
-    /home/semaphore/config \
-    /home/semaphore/tmp

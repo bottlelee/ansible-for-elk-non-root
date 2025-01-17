@@ -3,7 +3,7 @@ services:
   semaphore:
     ports:
       - 3000:3000
-    image: semaphore
+    image: semaphore:non-root
     container_name: semaphore
     hostname: semaphore
     restart: unless-stopped
@@ -18,7 +18,7 @@ services:
       SEMAPHORE_DB_PATH: /home/semaphore/data
       SEMAPHORE_CONFIG_PATH: /home/semaphore/config
       TZ: Asia/Shanghai
-    user: "1000"
+    user: semaphore
     volumes:
       - semaphore_config:/home/semaphore/config
       - semaphore_data:/home/semaphore/data
