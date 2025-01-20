@@ -1,5 +1,29 @@
 ---
 # tasks file for minio
+- name: Config storages
+  block:
+    - name: Check minio devices count
+      ansible.builtin.fail:
+        msg: Minio devices count must be greater than 0
+      when: (minio_devices | length) < 1
+
+    - name: Check if minio devices list is changed
+      ansible.builtin.copy:
+        content: "{{ minio_devices_hash }}"
+        dest: "{{ inventory_dir }}/files/minio_devices_hash"
+      register: minio_devices_hash_result
+      delegate_to: localhost
+      become: false
+
+    - name: Config storages
+      ansible.builtin.include_tasks:
+        file: storages.yml
+      loop: "{{ minio_devices }}"
+      loop_control:
+        loop_var: device
+        extended: true
+      when: minio_devices_hash_result.changed
+
 - name: Deploy/config minio
   block:
     - name: Check if minio is already installed
@@ -8,14 +32,6 @@
         state: started
 
   rescue:
-    - name: Config storages
-      ansible.builtin.include_tasks:
-        file: storages.yml
-      loop: "{{ minio_devices }}"
-      loop_control:
-        loop_var: device
-        extended: true
-
     - name: Install minio
       ansible.builtin.import_tasks:
         file: install.yml
