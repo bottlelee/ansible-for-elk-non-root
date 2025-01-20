@@ -35,6 +35,10 @@
         file: install_nginx.yml
 
   always:
+    - name: Update certificates
+      ansible.builtin.import_tasks:
+        file: certificates.yml
+
     - name: Config nginx
       ansible.builtin.import_tasks:
         file: config_nginx.yml

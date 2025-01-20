@@ -9,34 +9,44 @@
     validate: "{{ elk_install_dir }}/nginx/sbin/nginx -t -c %s"
   notify: Restart nginx
 
-- name: Update stream files
+# - name: Update stream files
+#   ansible.builtin.template:
+#     src: "{{ tpl_path }}"
+#     dest: "{{ tpl_dest }}"
+#     mode: "0640"
+#     owner: "{{ elk_user }}"
+#     group: "{{ elk_group }}"
+#   with_fileglob:
+#     - "{{ playbook_dir }}/templates/nginx/streams.d/*.conf.j2"
+#   loop_control:
+#     loop_var: tpl_path
+#     label: "{{ tpl_dest }}"
+#   vars:
+#     tpl_dest: "{{ elk_install_dir }}/nginx/streams.d/{{ tpl_path | basename | replace('.j2', '') }}"
+#   notify: Reload nginx
+
+- name: Update http(s) files
   ansible.builtin.template:
-    src: "{{ tpl_path }}"
-    dest: "{{ tpl_dest }}"
+    src: "nginx/sites.conf.j2"
+    dest: "{{ elk_install_dir }}/nginx/sites.d/{{ site.name }}.conf"
     mode: "0640"
     owner: "{{ elk_user }}"
     group: "{{ elk_group }}"
-  with_fileglob:
-    - "{{ playbook_dir }}/templates/nginx/streams.d/*.conf.j2"
+  loop: "{{ nginx_sites }}"
   loop_control:
-    loop_var: tpl_path
-    label: "{{ tpl_dest }}"
-  vars:
-    tpl_dest: "{{ elk_install_dir }}/nginx/streams.d/{{ tpl_path | basename | replace('.j2', '') }}"
+    loop_var: site
+    label: "{{ site.name }}"
   notify: Reload nginx
 
-- name: Update http files
+- name: Update stream files
   ansible.builtin.template:
-    src: "{{ tpl_path }}"
-    dest: "{{ tpl_dest }}"
+    src: "nginx/streams.conf.j2"
+    dest: "{{ elk_install_dir }}/nginx/streams.d/{{ stream.name }}.conf"
     mode: "0640"
     owner: "{{ elk_user }}"
     group: "{{ elk_group }}"
-  with_fileglob:
-    - "{{ playbook_dir }}/templates/nginx/sites.d/*.conf.j2"
+  loop: "{{ nginx_streams }}"
   loop_control:
-    loop_var: tpl_path
-    label: "{{ tpl_dest }}"
-  vars:
-    tpl_dest: "{{ elk_install_dir }}/nginx/sites.d/{{ tpl_path | basename | replace('.j2', '') }}"
+    loop_var: stream
+    label: "{{ stream.name }}"
   notify: Reload nginx
