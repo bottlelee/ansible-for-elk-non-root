@@ -69,9 +69,8 @@
   ansible.builtin.blockinfile:
     path: /etc/hosts
     block: |-
-      {% for host in (groups['all'] | sort) %}
-      {{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}.{{ elk_domain }}
-      {% endfor %}
+      {{ init_system_hosts }}
+    mode: "0644"
     owner: "{{ elk_user }}"
     group: "{{ elk_group }}"
     backup: true
