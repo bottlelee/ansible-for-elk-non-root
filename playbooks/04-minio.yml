@@ -2,6 +2,7 @@
 - name: Deploy/config minio
   hosts: minio
   become: true
+  gather_facts: false
   roles:
     - role: pre_tasks
       run_once: true

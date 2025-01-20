@@ -8,24 +8,64 @@
     - role: pre_tasks
       tags: always
 
-- name: Install ELK cluster
-  hosts: elasticsearch:kibana:logstash
+- name: Bootstrap ELK cluster
+  hosts: es_master
   become: false
   gather_facts: false
+  any_errors_fatal: true
+  roles:
+    - role: install_elk
+      vars:
+        elk_role: elasticsearch
+      tags: elasticsearch
+      when: ansible_host == elasticsearch_bootstrap_host
+
+- name: Deploy ELK master nodes
+  hosts: es_master
+  become: false
+  gather_facts: false
+  any_errors_fatal: true
   serial: 1
   roles:
     - role: install_elk
       vars:
         elk_role: elasticsearch
-      when: "'elasticsearch' in group_names"
+      tags: elasticsearch
+      when:
+        - ansible_host != elasticsearch_bootstrap_host
 
+- name: Deploy ELK nodes
+  hosts: elasticsearch:!es_master
+  become: false
+  gather_facts: false
+  any_errors_fatal: true
+  serial: 1
+  roles:
+    - role: install_elk
+      vars:
+        elk_role: elasticsearch
+      tags: elasticsearch
+
+- name: Deploy Kibana
+  hosts: kibana
+  become: false
+  gather_facts: false
+  any_errors_fatal: true
+  serial: 1
+  roles:
     - role: install_elk
       vars:
         elk_role: kibana
       tags: kibana
-      when: "'kibana' in group_names"
 
+- name: Deploy Logstash
+  hosts: logstash
+  become: false
+  gather_facts: false
+  any_errors_fatal: true
+  serial: 1
+  roles:
     - role: install_elk
       vars:
         elk_role: logstash
-      when: "'logstash' in group_names"
+      tags: logstash

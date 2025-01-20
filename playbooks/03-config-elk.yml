@@ -1,24 +1,48 @@
 ---
 - name: Gather all nodes facts
-  hosts: all
+  hosts: elk
   become: false
   gather_facts: false
   run_once: true
   roles:
     - role: pre_tasks
 
-- name: Config ELK
-  hosts: elasticsearch:kibana:logstash
+- name: Config ES masters
+  hosts: es_master
   serial: 1
   become: false
   gather_facts: false
+  any_errors_fatal: true
   roles:
     - role: config_elasticsearch
       tags: elasticsearch
-      when: "'elasticsearch' in group_names"
+
+- name: Config ES nodes
+  hosts: elasticsearch:!es_master
+  serial: 1
+  become: false
+  gather_facts: false
+  any_errors_fatal: true
+  roles:
+    - role: config_elasticsearch
+      tags: elasticsearch
+
+- name: Config Kibana
+  hosts: kibana
+  serial: 1
+  become: false
+  gather_facts: false
+  any_errors_fatal: true
+  roles:
     - role: config_kibana
       tags: kibana
-      when: "'kibana' in group_names"
+
+- name: Config Logstash
+  hosts: logstash
+  serial: 1
+  become: false
+  gather_facts: false
+  any_errors_fatal: true
+  roles:
     - role: config_logstash
       tags: logstash
-      when: "'logstash' in group_names"
