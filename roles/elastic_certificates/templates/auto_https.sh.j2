@@ -1,0 +1,17 @@
+#!/usr/bin/expect
+
+# Variables
+set timeout -1
+
+# Start the Elasticsearch HTTP certificate generation
+spawn /usr/share/elasticsearch/bin/elasticsearch-certutil http
+
+# Expect and send inputs
+expect "Please enter the output directory"
+send -- "/path/to/output/directory\r"
+
+# Process password prompts if needed
+expect "Enter password for elastic keystore"
+send -- "$password\r"
+
+expect eof

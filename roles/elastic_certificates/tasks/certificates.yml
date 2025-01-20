@@ -1,0 +1,52 @@
+---
+- name: Generate CA file
+  ansible.builtin.command:
+    argv:
+      - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-certutil"
+      - ca
+      - --out
+      - "{{ elk_certificates_path }}/elastic-stack-ca.p12"
+      - --pass
+      - ${ELASTIC_CA_PASSWORD}
+      - --silent
+    creates: "{{ elk_certificates_path }}/elastic-stack-ca.p12"
+  environment:
+    ELASTIC_CA_PASSWORD: "{{ certs_ca_password }}"
+  changed_when: false
+
+- name: Generate CERT file
+  ansible.builtin.command:
+    argv:
+      - "{{ elk_install_dir }}/elasticsearch/bin/elasticsearch-certutil"
+      - cert
+      - --ca
+      - "{{ elk_certificates_path }}/elastic-stack-ca.p12"
+      - --ca-pass
+      - ${ELASTIC_CA_PASSWORD}
+      - --out
+      - "{{ elk_certificates_path }}/elastic-certificates.p12"
+      - --pass
+      - ${ELASTIC_CERT_PASSWORD}
+      - --silent
+    creates: "{{ elk_certificates_path }}/elastic-certificates.p12"
+  environment:
+    ELASTIC_CA_PASSWORD: "{{ certs_ca_password }}"
+    ELASTIC_CERT_PASSWORD: "{{ certs_cert_password }}"
+  changed_when: false
+
+- name: Create local certificates directory
+  ansible.builtin.file:
+    path: "{{ inventory_dir }}/credentials/certs"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  become: false
+
+- name: Fetch certificates
+  ansible.builtin.fetch:
+    src: "{{ elk_certificates_path }}/{{ item }}"
+    dest: "{{ inventory_dir }}/credentials/certs/{{ item }}"
+    flat: true
+  with_items:
+    - elastic-certificates.p12
+    - elastic-stack-ca.p12

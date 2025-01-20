@@ -14,7 +14,7 @@ case "$1" in
     init)
         vagrant snapshot restore init
         ;;
-    rebuilt)
+    rebuild)
         vagrant destroy -f
         vagrant up
         vagrant snapshot save init
