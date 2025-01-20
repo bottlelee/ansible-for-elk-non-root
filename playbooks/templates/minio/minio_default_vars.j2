@@ -10,7 +10,11 @@ MINIO_ROOT_PASSWORD={{ minio_root_pass }}
 # The specified path uses MinIO expansion notation to denote a sequential series of drives between 1 and 4, inclusive.
 # All drives or paths included in the expanded drive list must exist *and* be empty or freshly formatted for MinIO to start successfully.
 
+{% if (minio_devices | count) > 1 %}
 MINIO_VOLUMES="{{ minio_mountpoint_root }}/data{1...{{ minio_devices | count }}}"
+{% else %}
+MINIO_VOLUMES="{{ minio_mountpoint_root }}/data1"
+{% endif %}
 
 # MINIO_OPTS sets any additional commandline options to pass to the MinIO server.
 # For example, `--console-address :9001` sets the MinIO Console listen port

@@ -14,5 +14,10 @@ ExecReload={{ elk_install_dir }}/nginx/sbin/nginx -s reload
 ExecStop=/bin/kill -s QUIT $MAINPID
 PrivateTmp=true
 
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
 [Install]
 WantedBy=multi-user.target

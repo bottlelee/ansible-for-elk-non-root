@@ -7,7 +7,11 @@ User={{ elk_user }}
 Group={{ elk_user }}
 ExecStart={{ elk_install_dir }}/logstash/bin/logstash
 WorkingDirectory={{ elk_install_dir }}/logstash
+
 Restart=always
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
 
 [Install]
 WantedBy=multi-user.target
