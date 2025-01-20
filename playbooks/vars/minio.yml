@@ -7,7 +7,8 @@ minio_package_url: >-
 
 minio_devices:
   - /dev/sdb
-  - /dev/sdc
+
+minio_devices_hash: "{{ minio_devices | sort | hash('md5') }}"
 
 minio_mountpoint_root: /mnt/minio
 

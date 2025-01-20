@@ -12,6 +12,12 @@ keepalived_vrrp_instances:
     virtual_ipaddress: "192.168.56.100"
     unicast_src_ip: "192.168.56.101"
     check_script: "/bin/pidof nginx" # Must be an absolute path
+  - name: "LOGSTASH"
+    master: "{{ groups['nginx'][1] }}"
+    interface: "eth1"
+    virtual_ipaddress: "192.168.56.101"
+    unicast_src_ip: "192.168.56.101"
+    check_script: "/bin/pidof nginx" # Must be an absolute path
 
 keepalived_dependencies:
   yum:

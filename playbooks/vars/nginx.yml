@@ -2,42 +2,47 @@
 nginx_sites:
   - name: elasticsearch
     listen_port: 19200
-    server_name: elasticsearch
     location: /
     upstreams: "{{ groups['elasticsearch'] }}"
     upstream_port: 9200
     upstream_method: least_conn
-    proxy_ssl_verify: off
+    proxy_ssl_verify: "off"
     proxy_protocol: https
 
   - name: kibana
-    listen_port: 80
-    server_name: kibana
+    listen_port: 443
     location: /
     upstreams: "{{ groups['kibana'] }}"
     upstream_port: 5601
     upstream_method: least_conn
-    proxy_ssl_verify: o
-    proxy_protocol: https
+    proxy_ssl_verify: "off"
+    proxy_protocol: http # HTTP only, no HTTPS on the kibana side
 
   - name: fleet-server
     listen_port: 18220
-    server_name: fleet-server
     location: /
-    upstreams: "{{ groups['fleet-server'] }}"
+    upstreams: "{{ groups['fleet_server'] }}"
     upstream_port: 8220
     upstream_method: least_conn
-    proxy_ssl_verify: off
-    proxy_protocol: http
+    proxy_ssl_verify: "off"
+    proxy_protocol: https
 
 nginx_streams:
-  - name: logstash
+  - name: elastic-agent
     listen_port: 15044
     server_name: logstash
     upstreams: "{{ groups['logstash'] }}"
     upstream_port: 5044
     upstream_method: least_conn
-    proxy_ssl_verify: off
+    proxy_ssl_verify: "off"
+
+  - name: logstash-input
+    listen_port: 19800
+    server_name: logstash
+    upstreams: "{{ groups['logstash'] }}"
+    upstream_port: 9800
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"
 
 nginx_compile_args:
   - --prefix={{ elk_install_dir }}/nginx
@@ -59,3 +64,13 @@ nginx_compile_tools:
   - pcre-devel
   - zlib-devel
   - openssl-devel
+
+# Gateway addresses shortcut
+nginx_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'NGINX') | map(attribute='virtual_ipaddress') | first }}"
+
+# Nginx certificates local path, if file not exists, self-sign certificates will be generated
+# You can overwrite the auto-gen certificates by providing your own certificates
+nginx_certificates:
+  key: "{{ elk_install_dir }}/nginx/ssl/{{ elk_domain }}.key"
+  cert: "{{ elk_install_dir }}/nginx/ssl/{{ elk_domain }}.crt"
+  ca: "{{ elk_install_dir }}/nginx/ssl/{{ elk_domain }}.ca"
