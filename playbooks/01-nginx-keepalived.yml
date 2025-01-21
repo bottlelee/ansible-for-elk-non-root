@@ -12,7 +12,6 @@
   hosts: nginx
   become: false
   gather_facts: false
-  any_errors_fatal: true
   serial: 1
 
   roles:

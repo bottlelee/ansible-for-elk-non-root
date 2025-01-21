@@ -63,4 +63,4 @@ elasticsearch_discovery_seed_hosts: >-
     {%- endfor -%}
   ]
 
-elasticsearch_gateway: "nginx.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'elasticsearch') | map(attribute='listen_port') | first }}"
+elasticsearch_gateway: "elasticsearch.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'elasticsearch') | map(attribute='listen_port') | first }}"

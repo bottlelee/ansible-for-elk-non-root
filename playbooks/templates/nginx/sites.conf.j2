@@ -9,8 +9,8 @@ server {
     listen {{ site.listen_port }} ssl;
     server_name {{ site.name }};
 
-    ssl_certificate {{ elk_install_dir }}/nginx/ssl/{{ elk_domain }}.pem;
-    ssl_certificate_key {{ elk_install_dir }}/nginx/ssl/{{ elk_domain }}.key;
+    ssl_certificate {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.cert | basename }};
+    ssl_certificate_key {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.key | basename }};
     #include {{ elk_install_dir }}/nginx/ssl/options-ssl-nginx.conf;
     #ssl_dhparam {{ elk_install_dir }}/nginx/ssl/ssl-dhparams.pem;
 

@@ -66,11 +66,13 @@ nginx_compile_tools:
   - openssl-devel
 
 # Gateway addresses shortcut
-nginx_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'NGINX') | map(attribute='virtual_ipaddress') | first }}"
+nginx_kibana_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'kibana') | map(attribute='virtual_ipaddress') | first }}"
+nginx_logstash_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'logstash') | map(attribute='virtual_ipaddress') | first }}"
+nginx_elasticsearch_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'elasticsearch') | map(attribute='virtual_ipaddress') | first }}"
 
 # Nginx certificates local path, if file not exists, self-sign certificates will be generated
 # You can overwrite the auto-gen certificates by providing your own certificates
 nginx_certificates:
-  key: "{{ elk_install_dir }}/nginx/ssl/{{ elk_domain }}.key"
-  cert: "{{ elk_install_dir }}/nginx/ssl/{{ elk_domain }}.crt"
-  ca: "{{ elk_install_dir }}/nginx/ssl/{{ elk_domain }}.ca"
+  key: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.key"
+  cert: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.crt"
+  ca: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.ca"

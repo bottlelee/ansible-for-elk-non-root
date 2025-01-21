@@ -12,7 +12,6 @@
   serial: 1
   become: false
   gather_facts: false
-  any_errors_fatal: true
   roles:
     - role: config_elasticsearch
       tags: elasticsearch
@@ -22,7 +21,6 @@
   serial: 1
   become: false
   gather_facts: false
-  any_errors_fatal: true
   roles:
     - role: config_elasticsearch
       tags: elasticsearch
@@ -32,7 +30,6 @@
   serial: 1
   become: false
   gather_facts: false
-  any_errors_fatal: true
   roles:
     - role: config_kibana
       tags: kibana
@@ -42,7 +39,6 @@
   serial: 1
   become: false
   gather_facts: false
-  any_errors_fatal: true
   roles:
     - role: config_logstash
       tags: logstash

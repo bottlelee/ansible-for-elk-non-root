@@ -21,4 +21,4 @@ kibana_config:
   xpack.encryptedSavedObjects.encryptionKey: "{{ lookup('password', inventory_dir + '/credentials/kibana/encryptedSavedObjects_encryptionKey length=32 chars=ascii_letters,digits') }}"
   path.data: "{{ elk_data_dir }}/kibana"
 
-kibana_gateway: "nginx.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'kibana') | map(attribute='listen_port') | first }}"
+kibana_gateway: "kibana.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'kibana') | map(attribute='listen_port') | first }}"

@@ -12,7 +12,6 @@
   hosts: es_master
   become: false
   gather_facts: false
-  any_errors_fatal: true
   roles:
     - role: install_elk
       vars:
@@ -24,7 +23,6 @@
   hosts: es_master
   become: false
   gather_facts: false
-  any_errors_fatal: true
   serial: 1
   roles:
     - role: install_elk
@@ -38,7 +36,6 @@
   hosts: elasticsearch:!es_master
   become: false
   gather_facts: false
-  any_errors_fatal: true
   serial: 1
   roles:
     - role: install_elk
@@ -50,7 +47,6 @@
   hosts: kibana
   become: false
   gather_facts: false
-  any_errors_fatal: true
   serial: 1
   roles:
     - role: install_elk
@@ -62,7 +58,6 @@
   hosts: logstash
   become: false
   gather_facts: false
-  any_errors_fatal: true
   serial: 1
   roles:
     - role: install_elk

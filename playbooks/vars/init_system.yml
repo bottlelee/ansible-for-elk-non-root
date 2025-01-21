@@ -22,4 +22,6 @@ init_system_hosts: |
   {{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}.{{ elk_domain }}
   {% endfor %}
 
-  {{ nginx_vrrp_address }} nginx.{{ elk_domain }}
+  {{ nginx_kibana_vrrp_address }} kibana.{{ elk_domain }}
+  {{ nginx_logstash_vrrp_address }} logstash.{{ elk_domain }}
+  {{ nginx_elasticsearch_vrrp_address }} elasticsearch.{{ elk_domain }}
