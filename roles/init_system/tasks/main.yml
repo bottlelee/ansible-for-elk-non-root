@@ -73,4 +73,5 @@
     mode: "0644"
     owner: "{{ elk_user }}"
     group: "{{ elk_group }}"
+    create: true
     backup: true

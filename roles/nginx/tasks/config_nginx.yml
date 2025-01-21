@@ -27,7 +27,7 @@
 
 - name: Update http(s) files
   ansible.builtin.template:
-    src: "nginx/sites.conf.j2"
+    src: nginx/sites.conf.j2
     dest: "{{ elk_install_dir }}/nginx/sites.d/{{ site.name }}.conf"
     mode: "0640"
     owner: "{{ elk_user }}"
@@ -40,7 +40,7 @@
 
 - name: Update stream files
   ansible.builtin.template:
-    src: "nginx/streams.conf.j2"
+    src: nginx/streams.conf.j2
     dest: "{{ elk_install_dir }}/nginx/streams.d/{{ stream.name }}.conf"
     mode: "0640"
     owner: "{{ elk_user }}"

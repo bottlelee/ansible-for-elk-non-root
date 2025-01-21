@@ -11,7 +11,7 @@
 
 - name: Checking if node is already enrolled
   ansible.builtin.uri:
-    url: https://{{ elasticsearch_bootstrap_host }}:{{ elasticsearch_http_port }}/_cat/nodes?pretty
+    url: https://{{ elasticsearch_gateway }}/_cat/nodes?pretty
     url_username: elastic
     url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
     force_basic_auth: true
@@ -35,7 +35,7 @@
 
 - name: Re-check if node is already enrolled
   ansible.builtin.uri:
-    url: https://{{ elasticsearch_bootstrap_host }}:{{ elasticsearch_http_port }}/_cat/nodes?pretty
+    url: https://{{ elasticsearch_gateway }}/_cat/nodes?pretty
     url_username: elastic
     url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
     force_basic_auth: true

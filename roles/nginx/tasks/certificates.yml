@@ -1,47 +1,51 @@
+---
 - name: Upload/generate certificates
   block:
     - name: Create SSL path
-      file:
+      ansible.builtin.file:
         path: "{{ elk_install_dir }}/nginx/ssl"
         state: directory
         owner: "{{ elk_user }}"
         group: "{{ elk_group }}"
-        mode: 0755
+        mode: "0755"
 
     - name: Upload certificates
-      copy:
-        src: "{{ cert }}"
-        dest: "{{ elk_install_dir }}/nginx/ssl/{{ cert | basename }}"
+      ansible.builtin.copy:
+        src: "{{ file_path }}"
+        dest: "{{ file_dest }}"
         owner: "{{ elk_user }}"
         group: "{{ elk_group }}"
-        mode: 0640
+        mode: "0640"
         backup: true
       with_items:
-        - "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.key"
-        - "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.pem"
+        - "{{ nginx_certificates.key }}"
+        - "{{ nginx_certificates.cert }}"
       loop_control:
-        loop_var: cert
+        loop_var: file_path
+        label: "{{ file_dest }}"
+      vars:
+        file_dest: "{{ elk_install_dir }}/nginx/ssl/{{ file_path | basename }}"
 
   rescue:
     - name: Generate certificates on ansible controller
-      block:
-        - name: Create local directory
-          file:
-            path: "{{ inventory_dir }}/credentials/nginx"
-            state: directory
-            mode: 0750
-
-        - name: Generate self-signed certificates
-          community.crypto.openssl_privatekey:
-            path: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.key"
-
-        - name: Create simple self-signed certificate
-          community.crypto.x509_certificate:
-            path: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.pem"
-            privatekey_path: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.key"
-            provider: selfsigned
       delegate_to: localhost
       become: false
 
+      block:
+        - name: Create local directory
+          ansible.builtin.file:
+            path: "{{ inventory_dir }}/credentials/nginx"
+            state: directory
+            mode: "0750"
+
+        - name: Generate self-signed certificates
+          community.crypto.openssl_privatekey:
+            path: "{{ nginx_certificates.key }}"
+
+        - name: Create simple self-signed certificate
+          community.crypto.x509_certificate:
+            path: "{{ nginx_certificates.cert }}"
+            privatekey_path: "{{ nginx_certificates.key }}"
+            provider: selfsigned
     - name: Repeat tasks
-      include_tasks: certificates.yml
+      ansible.builtin.include_tasks: certificates.yml

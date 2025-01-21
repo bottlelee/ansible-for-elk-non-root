@@ -45,3 +45,15 @@
     - http_ca.crt
     - http.p12
     - transport.p12
+
+- name: Remove any existing enrollment token files
+  ansible.builtin.file:
+    path: "{{ file_path }}"
+    state: absent
+  with_items:
+    - "{{ inventory_dir }}/files/enrollment-token-node"
+    - "{{ inventory_dir }}/files/enrollment-token-kibana"
+  loop_control:
+    loop_var: file_path
+  become: false
+  delegate_to: localhost

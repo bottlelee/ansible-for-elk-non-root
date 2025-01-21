@@ -75,6 +75,7 @@
       ansible.builtin.get_url:
         url: "{{ download_packages.keepalived }}"
         dest: "{{ playbook_dir }}/files/"
+        mode: "0644"
       delegate_to: localhost
       become: false
       run_once: true
