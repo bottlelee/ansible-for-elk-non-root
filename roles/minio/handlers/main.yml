@@ -1,8 +1,21 @@
 ---
 # handlers file for minio
-- name: Restart minio
+- name: Restarting minio
   ansible.builtin.service:
     name: minio
     state: restarted
     enabled: true
     daemon_reload: true
+  listen: Restart minio
+
+- name: Wait for minio service started
+  ansible.builtin.wait_for:
+    port: "{{ minio_port }}"
+    state: started
+    timeout: 10
+  with_items:
+    - 9000
+    - 9001
+  loop_control:
+    loop_var: minio_port
+  listen: Restart minio

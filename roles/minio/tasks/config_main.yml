@@ -1,10 +1,10 @@
 ---
-- name: Create /etc/default/minio
+- name: "Create {{ elk_install_dir }}/minio/minio.conf"
   ansible.builtin.template:
     src: minio/minio_default_vars.j2
-    dest: /etc/default/minio
-    owner: minio-user
-    group: minio-user
+    dest: "{{ elk_install_dir }}/minio/minio.conf"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
     mode: "0644"
     backup: true
   notify: Restart minio
