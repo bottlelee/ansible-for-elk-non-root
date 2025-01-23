@@ -3,7 +3,7 @@
   ansible.builtin.debug:
     msg: "{{ nginx_compile_args | sort }}"
 
-- name: Configure nginx make file
+- name: Generating nginx make files
   ansible.builtin.command: >-
     ./configure {{ nginx_compile_args | sort | join(' ') }}
   changed_when: nginx_compile_args_hash_result is changed

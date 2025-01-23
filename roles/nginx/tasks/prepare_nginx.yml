@@ -13,6 +13,7 @@
         - "{{ elk_install_dir }}/nginx/sites.d"
         - "{{ elk_logs_dir }}/nginx/"
         - "{{ elk_build_dir }}/nginx/"
+        - "{{ elk_install_dir }}/nginx/cache"
       loop_control:
         loop_var: path
 
