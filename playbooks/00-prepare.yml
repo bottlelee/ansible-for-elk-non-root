@@ -3,16 +3,18 @@
   hosts: all
   become: true
   gather_facts: false
+  vars:
+    elk_roles:
+      - elasticsearch
+      - kibana
+      - nginx
+      - logstash
+      - minio
   tasks:
     - name: Import role 'init_system'
       ansible.builtin.include_role:
         name: init_system
-      with_items:
-        - elasticsearch
-        - kibana
-        - nginx
-        - logstash
-        - minio
+      loop: "{{ elk_roles | sort }}"
       loop_control:
         loop_var: elk_role
       when: elk_role in group_names

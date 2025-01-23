@@ -64,3 +64,14 @@
       vars:
         elk_role: logstash
       tags: logstash
+
+# - name: Deploy/config Fleet Server
+#   hosts: fleet_server
+#   become: false
+#   gather_facts: false
+#   serial: 1
+#   roles:
+#     - role: elastic_agent
+#       vars:
+#         fleet_mode: server
+#       tags: fleet
