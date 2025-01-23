@@ -17,7 +17,7 @@ init_system_ulimit:
 init_system_ssh_key_login: true
 
 # Extra hosts
-init_system_hosts: |
+init_system_hosts: |-
   {% for host in (groups['all'] | sort) %}
   {{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}.{{ elk_domain }}
   {% endfor %}

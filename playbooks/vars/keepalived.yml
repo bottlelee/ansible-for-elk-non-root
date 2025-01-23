@@ -1,32 +1,32 @@
+---
 keepalived_configure_args:
-  - "--prefix={{ elk_install_dir }}/keepalived"
-  - "--enable-log-file"
-  - "--enable-json"
+  - --prefix={{ elk_install_dir }}/keepalived
+  - --enable-log-file
+  - --enable-json
 
 keepalived_configure_args_hash: "{{ keepalived_configure_args | sort | hash('sha256') }}"
 
 keepalived_vrrp_instances:
-  - name: "kibana"
+  - name: kibana
     master: "{{ groups['nginx'][0] }}"
-    interface: "eth1"
-    virtual_ipaddress: "192.168.56.100"
-    unicast_src_ip: "192.168.56.101"
-    check_script: "/bin/pidof nginx" # Must be an absolute path
+    interface: eth1
+    virtual_ipaddress: 192.168.56.100
+    unicast_src_ip: 192.168.56.101
+    check_script: /bin/pidof nginx # Must be an absolute path
 
-  - name: "logstash"
+  - name: logstash
     master: "{{ groups['nginx'][1] }}"
-    interface: "eth1"
-    virtual_ipaddress: "192.168.56.101"
-    unicast_src_ip: "192.168.56.101"
-    check_script: "/bin/pidof nginx" # Must be an absolute path
+    interface: eth1
+    virtual_ipaddress: 192.168.56.101
+    unicast_src_ip: 192.168.56.101
+    check_script: /bin/pidof nginx # Must be an absolute path
 
-  - name: "elasticsearch"
+  - name: elasticsearch
     master: "{{ groups['nginx'][0] }}"
-    interface: "eth1"
-    virtual_ipaddress: "192.168.56.102"
-    unicast_src_ip: "192.168.56.101"
-    check_script: "/bin/pidof nginx" # Must be an absolute path
-
+    interface: eth1
+    virtual_ipaddress: 192.168.56.102
+    unicast_src_ip: 192.168.56.101
+    check_script: /bin/pidof nginx # Must be an absolute path
 
 keepalived_dependencies:
   yum:
@@ -34,4 +34,4 @@ keepalived_dependencies:
     - openssl-devel
     - make
 
-keepalived_options: "-D --dont-release-vrrp"
+keepalived_options: -D --dont-release-vrrp

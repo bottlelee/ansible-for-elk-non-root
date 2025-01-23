@@ -30,7 +30,6 @@ nginx_sites:
 nginx_streams:
   - name: elastic-agent
     listen_port: 15044
-    server_name: logstash
     upstreams: "{{ groups['logstash'] }}"
     upstream_port: 5044
     upstream_method: least_conn
@@ -38,7 +37,6 @@ nginx_streams:
 
   - name: logstash-input
     listen_port: 19800
-    server_name: logstash
     upstreams: "{{ groups['logstash'] }}"
     upstream_port: 9800
     upstream_method: least_conn

@@ -1,7 +1,8 @@
+---
 # Must be per setting in one line
 kibana_config:
   server.port: 5601
-  server.host: "0.0.0.0"
+  server.host: 0.0.0.0
   server.name: "{{ inventory_hostname | default(ansible_hostname) }}"
   csp.strict: true
   elasticsearch.requestTimeout: 90000
@@ -15,10 +16,11 @@ kibana_config:
   # server.ssl.certificate: "{{ elk_install_dir }}/kibana/config/certs/kibana-{{ elk_cluster_name }}.csr"
   # server.ssl.key: "{{ elk_install_dir }}/kibana/config/certs/kibana-{{ elk_cluster_name }}.key"
   # server.ssl.enabled: true
-  xpack.security.session.lifespan: "7d"
-  xpack.security.session.idleTimeout: "3d"
+  xpack.security.session.lifespan: 7d
+  xpack.security.session.idleTimeout: 3d
   xpack.security.encryptionKey: "{{ lookup('password', inventory_dir + '/credentials/kibana/security_encryptionKey length=32 chars=ascii_letters,digits') }}"
-  xpack.encryptedSavedObjects.encryptionKey: "{{ lookup('password', inventory_dir + '/credentials/kibana/encryptedSavedObjects_encryptionKey length=32 chars=ascii_letters,digits') }}"
+  xpack.encryptedSavedObjects.encryptionKey: "{{ lookup('password', inventory_dir + '/credentials/kibana/encryptedSavedObjects_encryptionKey length=32 chars=ascii_letters,digits')
+    }}"
   path.data: "{{ elk_data_dir }}/kibana"
 
-kibana_gateway: "kibana.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'kibana') | map(attribute='listen_port') | first }}"
+kibana_gateway: kibana.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'kibana') | map(attribute='listen_port') | first }}

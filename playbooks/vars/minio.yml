@@ -1,27 +1,34 @@
-minio_package_url: >-
-  {%- if ansible_pkg_mgr in ['yum', 'dnf'] -%}
-    https://dl.min.io/server/minio/release/linux-amd64/archive/minio-20241218131544.0.0-1.x86_64.rpm
-  {%- else -%}
-    https://dl.min.io/server/minio/release/linux-amd64/archive/minio_20241218131544.0.0_amd64.deb
-  {%- endif -%}
+---
+# minio_package_url: >-
+#   {%- if ansible_pkg_mgr in ['yum', 'dnf'] -%}
+#     https://dl.min.io/server/minio/release/linux-amd64/archive/minio-20241218131544.0.0-1.x86_64.rpm
+#   {%- else -%}
+#     https://dl.min.io/server/minio/release/linux-amd64/archive/minio_20241218131544.0.0_amd64.deb
+#   {%- endif -%}
 
+minio_package_url: https://dl.min.io/server/minio/release/linux-amd64/minio
+
+# !!! WARNING !!!
+# You CAN'T add more than 10 devices to the same MinIO instance
+# And you CAN'T change the devices list once the instance is running
 minio_devices:
   - /dev/sdb
+  - /dev/sdc
 
 minio_devices_hash: "{{ minio_devices | sort | hash('md5') }}"
 
 minio_mountpoint_root: /mnt/minio
 
-minio_root_user: "minio"
+minio_root_user: minio
 minio_root_pass: "{{ lookup('password', inventory_dir + '/credentials/minio/minio_root_pass length=16 chars=ascii_letters,digits') }}"
 
-minio_api_prefix: "http://{{ ansible_host }}:9001/api/v1"
+minio_api_prefix: http://{{ ansible_host }}:9001/api/v1
 
 # https://min.io/docs/minio/kubernetes/upstream/administration/identity-access-management/policy-based-access-control.html#policy-document-structure
 minio_objects:
-  - name: "elasticsearch-snapshots"
+  - name: elasticsearch-snapshots
     access_key:
-      description: "Elasticsearch snapshots account"
+      description: Elasticsearch snapshots account
       # expiry: "2025-01-31T00:00:00Z"
       # status: "on"
       # policy: ""

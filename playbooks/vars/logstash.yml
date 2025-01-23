@@ -1,2 +1,3 @@
-logstash_input_agent_gateway: "logstash.{{ elk_domain }}:{{ nginx_streams | selectattr('name', 'eq', 'elastic-agent') | map(attribute='listen_port') | first }}"
-logstash_input_logstash_gateway: "logstash.{{ elk_domain }}:{{ nginx_streams | selectattr('name', 'eq', 'logstash-input') | map(attribute='listen_port') | first }}"
+---
+logstash_input_agent_gateway: logstash.{{ elk_domain }}:{{ nginx_streams | selectattr('name', 'eq', 'elastic-agent') | map(attribute='listen_port') | first }}
+logstash_input_logstash_gateway: logstash.{{ elk_domain }}:{{ nginx_streams | selectattr('name', 'eq', 'logstash-input') | map(attribute='listen_port') | first }}
