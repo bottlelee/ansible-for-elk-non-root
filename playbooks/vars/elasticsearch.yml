@@ -46,21 +46,34 @@ elasticsearch_config:
   node.roles: |
     {% for role in
       (elasticsearch_node_roles | dict2items)
-      if role.key in group_names
+        if role.key in group_names
     %}
     {{ role.value | sort }}
     {% endfor %}
 
+# Keystore settings
 elasticsearch_keystore:
   xpack.security.http.ssl.keystore.secure_password: "{{ elasticsearch_cert_password }}"
   xpack.security.transport.ssl.keystore.secure_password: "{{ elasticsearch_cert_password }}"
   xpack.security.transport.ssl.truststore.secure_password: "{{ elasticsearch_cert_password }}"
 
+# Snapshot storage with MinIO
+elasticsearch_minio_snapshot_bucket: "{{ minio_objects | selectattr('name', 'search', 'elasticsearch') | map(attribute='name') | first }}"
+elasticsearch_minio_endpoint: "{{ groups['minio'] | map('extract', hostvars, ['ansible_host']) | first }}"
+elasticsearch_minio_keystore:
+  s3.client.default.access_key: "{{ lookup('file', inventory_dir + '/credentials/minio/' + elasticsearch_minio_snapshot_bucket + '_accessKey') }}"
+  s3.client.default.secret_key: "{{ lookup('file', inventory_dir + '/credentials/minio/' + elasticsearch_minio_snapshot_bucket + '_secretKey') }}"
+  # s3.client.default.session_token:
+
+# Elasticsearch discovery settings
 elasticsearch_discovery_seed_hosts: >-
   [
     {%- for host in groups['es_master'] -%}
-    "{{ host }}.{{ elk_domain }}:{{ elasticsearch_transport_port | default('9300') }}"{{ "," if not loop.last else "" }}
+    "{{ host }}.{{ elk_domain }}:{{ elasticsearch_transport_port }}"{{ "," if not loop.last else "" }}
     {%- endfor -%}
   ]
 
-elasticsearch_gateway: elasticsearch.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'elasticsearch') | map(attribute='listen_port') | first }}
+elasticsearch_gateway_http_port: "{{ nginx_sites | selectattr('name', 'eq', 'elasticsearch') | map(attribute='listen_port') | first }}"
+elasticsearch_gateway_url: "https://elasticsearch.{{ elk_domain }}:{{ elasticsearch_gateway_http_port }}"
+
+elasticsearch_bin_dir: "{{ elk_install_dir }}/elasticsearch/bin"

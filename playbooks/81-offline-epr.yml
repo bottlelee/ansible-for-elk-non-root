@@ -1,0 +1,66 @@
+---
+- name: Update and create offline EPR container image
+  hosts: localhost
+  become: false
+  gather_facts: false
+  vars:
+    epr_image: docker.elastic.co/package-registry/distribution:production
+    epr_local_dest: "{{ playbook_dir }}/files/downloads/elastic_package_registry_container.tar"
+  vars_prompt:
+    - name: warning
+      prompt: "WARNING: This playook can only run on a docker/podman host, not on the target host or in a container"
+      default: Understood
+      private: false
+    - name: cmd_bin
+      prompt: "Choose a command: docker or podman"
+      default: docker
+      private: false
+    - name: prune_images
+      prompt: Prune images before creating the offline EPR container image?
+      default: false
+      private: false
+
+  tasks:
+    - name: Prune images
+      ansible.builtin.command: "{{ cmd_bin }} image prune -af"
+      changed_when: false
+      when: prune_images
+
+    - name: Pulling image {{ epr_image }}
+      community.docker.docker_image:
+        name: "{{ epr_image }}"
+        source: pull
+      when: cmd_bin == "docker"
+      notify: Export image
+
+    - name: Pulling image {{ epr_image }}
+      containers.podman.podman_image:
+        name: "{{ epr_image }}"
+      when: cmd_bin == "podman"
+      notify: Export image
+
+  handlers:
+    - name: Exporting image {{ epr_image }}
+      community.docker.docker_image:
+        name: "{{ epr_image }}"
+        source: local
+        archive_path: "{{ epr_local_dest }}"
+      when: cmd_bin == "docker"
+      listen: Export image
+      notify: Compress image
+
+    - name: Exporting image {{ epr_image }}
+      containers.podman.podman_save:
+        name: "{{ epr_image }}"
+        dest: "{{ epr_local_dest }}"
+      when: cmd_bin == "podman"
+      listen: Export image
+      notify: Compress image
+
+    - name: Compress image to xz format
+      ansible.builtin.command: xz -z -e -f "{{ epr_local_dest }}"
+      changed_when: false
+      args:
+        chdir: "{{ playbook_dir }}/files/downloads"
+      register: xz_result
+      listen: Compress image

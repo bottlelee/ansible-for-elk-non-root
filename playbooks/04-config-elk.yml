@@ -12,6 +12,13 @@
   serial: 1
   become: false
   gather_facts: false
+  module_defaults:
+    ansible.builtin.uri:
+      url_username: elastic
+      url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
+      force_basic_auth: true
+      validate_certs: false
+      return_content: true
   roles:
     - role: config_elasticsearch
       tags: elasticsearch
@@ -21,6 +28,13 @@
   serial: 1
   become: false
   gather_facts: false
+  module_defaults:
+    ansible.builtin.uri:
+      url_username: elastic
+      url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
+      force_basic_auth: true
+      validate_certs: false
+      return_content: true
   roles:
     - role: config_elasticsearch
       tags: elasticsearch
@@ -30,6 +44,13 @@
   serial: 1
   become: false
   gather_facts: false
+  module_defaults:
+    ansible.builtin.uri:
+      url_username: elastic
+      url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
+      force_basic_auth: true
+      validate_certs: false
+      return_content: true
   roles:
     - role: config_kibana
       tags: kibana

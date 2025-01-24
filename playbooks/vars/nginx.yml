@@ -4,7 +4,7 @@ nginx_sites:
     listen_port: 19200
     location: /
     upstreams: "{{ groups['elasticsearch'] }}"
-    upstream_port: 9200
+    upstream_port: "{{ elasticsearch_http_port | default('9200') }}"
     upstream_method: least_conn
     proxy_ssl_verify: "off"
     proxy_protocol: https
@@ -13,7 +13,7 @@ nginx_sites:
     listen_port: 443
     location: /
     upstreams: "{{ groups['kibana'] }}"
-    upstream_port: 5601
+    upstream_port: "{{ kibana_port | default('5601') }}"
     upstream_method: least_conn
     proxy_ssl_verify: "off"
     proxy_protocol: http # HTTP only, no HTTPS on the kibana side
@@ -42,6 +42,13 @@ nginx_streams:
     upstream_method: least_conn
     proxy_ssl_verify: "off"
 
+  - name: elasticsearch-transport
+    listen_port: 19300
+    upstreams: "{{ groups['es_master'] }}"
+    upstream_port: 9300
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"
+
 nginx_compile_args:
   - --prefix={{ elk_install_dir }}/nginx
   - --with-http_ssl_module
@@ -64,9 +71,10 @@ nginx_compile_tools:
   - openssl-devel
 
 # Gateway addresses shortcut
-nginx_kibana_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'kibana') | map(attribute='virtual_ipaddress') | first }}"
-nginx_logstash_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'logstash') | map(attribute='virtual_ipaddress') | first }}"
-nginx_elasticsearch_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'elasticsearch') | map(attribute='virtual_ipaddress') | first }}"
+# nginx_kibana_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'kibana') | map(attribute='virtual_ipaddress') | first }}"
+# nginx_logstash_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'logstash') | map(attribute='virtual_ipaddress') | first }}"
+# nginx_elasticsearch_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'elasticsearch') | map(attribute='virtual_ipaddress') | first }}"
+# nginx_fleet_server_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'fleet-server') | map(attribute='virtual_ipaddress') | first }}"
 
 # Nginx certificates local path, if file not exists, self-sign certificates will be generated
 # You can overwrite the auto-gen certificates by providing your own certificates

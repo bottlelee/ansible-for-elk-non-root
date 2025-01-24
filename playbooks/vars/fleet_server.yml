@@ -1,2 +1,0 @@
----
-fleet_server_gateway: nginx.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'fleet-server') | map(attribute='listen_port') | first }}

@@ -7,7 +7,7 @@ upstream {{ site.name }} {
 
 server {
     listen {{ site.listen_port }} ssl;
-    server_name {{ site.name }};
+    server_name {{ site.name }}.{{ elk_domain }};
 
     ssl_certificate {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.cert | basename }};
     ssl_certificate_key {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.key | basename }};

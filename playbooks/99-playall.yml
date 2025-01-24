@@ -5,11 +5,11 @@
 - name: Install nginx and keepalived
   ansible.builtin.import_playbook: 01-nginx-keepalived.yml
 
+- name: Deploy/config minio
+  ansible.builtin.import_playbook: 02-minio.yml
+
 - name: Deploy ELK
-  ansible.builtin.import_playbook: 02-install-elk.yml
+  ansible.builtin.import_playbook: 03-install-elk.yml
 
 - name: Config ELK
-  ansible.builtin.import_playbook: 03-config-elk.yml
-
-- name: Deploy/config minio
-  ansible.builtin.import_playbook: 04-minio.yml
+  ansible.builtin.import_playbook: 04-config-elk.yml

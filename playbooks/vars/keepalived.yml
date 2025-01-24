@@ -10,22 +10,29 @@ keepalived_vrrp_instances:
   - name: kibana
     master: "{{ groups['nginx'][0] }}"
     interface: eth1
-    virtual_ipaddress: 192.168.56.100
-    unicast_src_ip: 192.168.56.101
+    virtual_ipaddress: 192.168.56.253
+    unicast_src_ip: 192.168.56.254
     check_script: /bin/pidof nginx # Must be an absolute path
 
   - name: logstash
     master: "{{ groups['nginx'][1] }}"
     interface: eth1
-    virtual_ipaddress: 192.168.56.101
-    unicast_src_ip: 192.168.56.101
+    virtual_ipaddress: 192.168.56.252
+    unicast_src_ip: 192.168.56.254
     check_script: /bin/pidof nginx # Must be an absolute path
 
   - name: elasticsearch
     master: "{{ groups['nginx'][0] }}"
     interface: eth1
-    virtual_ipaddress: 192.168.56.102
-    unicast_src_ip: 192.168.56.101
+    virtual_ipaddress: 192.168.56.251
+    unicast_src_ip: 192.168.56.254
+    check_script: /bin/pidof nginx # Must be an absolute path
+
+  - name: fleet-server
+    master: "{{ groups['nginx'][1] }}"
+    interface: eth1
+    virtual_ipaddress: 192.168.56.250
+    unicast_src_ip: 192.168.56.254
     check_script: /bin/pidof nginx # Must be an absolute path
 
 keepalived_dependencies:
@@ -34,4 +41,4 @@ keepalived_dependencies:
     - openssl-devel
     - make
 
-keepalived_options: -D --dont-release-vrrp
+keepalived_options: -D

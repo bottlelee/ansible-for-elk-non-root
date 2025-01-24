@@ -6,4 +6,6 @@
   roles:
     - role: pre_tasks
       run_once: true
+
     - role: minio
+      when: minio_enabled

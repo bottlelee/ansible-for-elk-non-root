@@ -13,7 +13,7 @@ init_system_ulimit:
   - "{{ elk_user }} soft memlock unlimited"
   - "{{ elk_user }} hard memlock unlimited"
 
-# Enable SSH key login
+# TODO: Enable SSH key login
 init_system_ssh_key_login: true
 
 # Extra hosts
@@ -22,6 +22,6 @@ init_system_hosts: |-
   {{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}.{{ elk_domain }}
   {% endfor %}
 
-  {{ nginx_kibana_vrrp_address }} kibana.{{ elk_domain }}
-  {{ nginx_logstash_vrrp_address }} logstash.{{ elk_domain }}
-  {{ nginx_elasticsearch_vrrp_address }} elasticsearch.{{ elk_domain }}
+  {% for host in (keepalived_vrrp_instances | sort(attribute='virtual_ipaddress')) %}
+  {{ host.virtual_ipaddress }} {{ host.name | lower }}.{{ elk_domain }}
+  {% endfor %}
