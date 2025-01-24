@@ -16,7 +16,7 @@
 
     - name: Unarchive keepalived package
       ansible.builtin.unarchive:
-        src: "{{ download_packages.keepalived | basename }}"
+        src: downloads/{{ download_packages.keepalived | basename }}
         dest: "{{ elk_build_dir }}"
         owner: "{{ elk_user }}"
         group: "{{ elk_group }}"
@@ -71,10 +71,18 @@
       become: true
 
   rescue:
+    - name: Create local path '{{ playbook_dir }}/files/downloads'
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/files/downloads/"
+        state: directory
+        mode: "0755"
+      become: false
+      delegate_to: localhost
+
     - name: Download keepalived package
       ansible.builtin.get_url:
         url: "{{ download_packages.keepalived }}"
-        dest: "{{ playbook_dir }}/files/"
+        dest: "{{ playbook_dir }}/files/downloads/"
         mode: "0644"
       delegate_to: localhost
       become: false
