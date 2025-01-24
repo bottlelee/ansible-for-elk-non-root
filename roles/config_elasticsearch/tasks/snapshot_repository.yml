@@ -1,0 +1,33 @@
+---
+- name: Config/update snapshot repository
+  block:
+    - name: Get snapshot repository info
+      ansible.builtin.uri:
+        url: "{{ elasticsearch_gateway_url }}/_snapshot/{{ elasticsearch_minio_snapshot_bucket }}?pretty"
+      register: snapshot_repository_info
+
+    - name: Verify snapshot repository
+      ansible.builtin.uri:
+        url: "{{ kibana_gateway_url }}/api/snapshot_restore/repositories/{{ elasticsearch_minio_snapshot_bucket }}/verify"
+      register: snapshot_repository_verify
+      failed_when: snapshot_repository_verify.json.verification.error.message is defined
+
+  rescue:
+    - name: Print verification error message
+      ansible.builtin.debug:
+        msg: "{{ snapshot_repository_verify.json.verification.error.message }}"
+      when: snapshot_repository_verify.json.verification.error.message is defined
+
+    - name: Set/update minio keystore
+      ansible.builtin.include_tasks:
+        file: keystore.yml
+      with_dict: "{{ elasticsearch_minio_keystore }}"
+      loop_control:
+        loop_var: keystore
+
+    - name: Create snapshot repository
+      ansible.builtin.uri:
+        url: "{{ elasticsearch_gateway_url }}/_snapshot/{{ elasticsearch_minio_snapshot_bucket }}?pretty"
+        method: PUT
+        body_format: json
+        body: "{{ lookup('template', 'elasticsearch/snapshot_repository.json.j2') }}"

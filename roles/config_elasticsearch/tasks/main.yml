@@ -10,3 +10,9 @@
     marker: "#-------------------------- {mark} ANSIBLE MANAGED BLOCK --------------------------"
   notify: Restart elasticsearch
   when: elasticsearch_config is defined
+
+# - name: Config snapshot repository
+#   ansible.builtin.import_tasks:
+#     file: snapshot_repository.yml
+#   when: minio_enabled
+#   run_once: true
