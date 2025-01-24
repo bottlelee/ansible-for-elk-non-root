@@ -1,4 +1,4 @@
-playbooks/files/*
+playbooks/files/downloads/*
 credentials
 .vagrant
 inventories/*/files/*
