@@ -1,5 +1,5 @@
 ---
-- name: "Create {{ elk_install_dir }}/minio/minio.conf"
+- name: Create {{ elk_install_dir }}/minio/minio.conf
   ansible.builtin.template:
     src: minio/minio_default_vars.j2
     dest: "{{ elk_install_dir }}/minio/minio.conf"
@@ -41,8 +41,8 @@
         loop_var: account
         label: "{{ account.name }}"
       vars:
-        account_access_key: "{{ lookup('password', inventory_dir + '/credentials/minio/' + account.name + '_accessKey length=20 chars=ascii_letters,digits') }}"
-        account_secret_key: "{{ lookup('password', inventory_dir + '/credentials/minio/' + account.name + '_secretKey length=40 chars=ascii_letters,digits') }}"
+        minio_access_key: "{{ lookup('password', inventory_dir + '/credentials/minio/' + account.name + '_accessKey length=20 chars=ascii_letters,digits') }}"
+        minio_secret_key: "{{ lookup('password', inventory_dir + '/credentials/minio/' + account.name + '_secretKey length=40 chars=ascii_letters,digits') }}"
 
 - name: Manage buckets
   block:

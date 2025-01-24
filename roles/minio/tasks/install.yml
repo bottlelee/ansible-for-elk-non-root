@@ -11,20 +11,20 @@
 
     - name: Upload MinIO binary
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/files/minio/{{ minio_package_url | basename }}"
+        src: "{{ playbook_dir }}/files/downloads/{{ minio_package_url | basename }}"
         dest: "{{ elk_install_dir }}/minio/{{ minio_package_url | basename }}"
         owner: "{{ elk_user }}"
         group: "{{ elk_group }}"
         mode: "0750"
 
-    - name: "Grant mountpoint access to {{ elk_user }}"
+    - name: Grant mountpoint access to {{ elk_user }}
       ansible.builtin.file:
         path: "{{ minio_mountpoint_root }}"
         owner: "{{ elk_user }}"
         group: "{{ elk_group }}"
         recurse: true
 
-    - name: "Create {{ elk_install_dir }}/minio/minio.conf"
+    - name: Create {{ elk_install_dir }}/minio/minio.conf
       ansible.builtin.template:
         src: minio/minio_default_vars.j2
         dest: "{{ elk_install_dir }}/minio/minio.conf"
@@ -35,17 +35,19 @@
       notify: Restart minio
 
   rescue:
-    - name: Create local path '{{ playbook_dir }}/files/minio/'
+    - name: Create local path '{{ playbook_dir }}/files/downloads'
       ansible.builtin.file:
-        path: "{{ playbook_dir }}/files/minio/"
+        path: "{{ playbook_dir }}/files/downloads"
         state: directory
+        mode: "0755"
       become: false
       delegate_to: localhost
 
     - name: Downloading {{ minio_package_url }}
       ansible.builtin.get_url:
         url: "{{ minio_package_url }}"
-        dest: "{{ playbook_dir }}/files/minio/{{ minio_package_url | basename }}"
+        dest: "{{ playbook_dir }}/files/downloads/{{ minio_package_url | basename }}"
+        mode: "0644"
       become: false
       delegate_to: localhost
 
