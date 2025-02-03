@@ -11,7 +11,7 @@
     chdir: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
   notify: Restart nginx
 
-- name: Build and install nginx
+- name: Compile and install nginx
   community.general.make:
     chdir: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
     target: install

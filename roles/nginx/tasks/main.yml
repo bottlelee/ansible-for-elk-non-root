@@ -25,6 +25,11 @@
         name: nginx
         state: started
 
+    - name: Waiting for nginx service to be ready
+      ansible.builtin.wait_for:
+        port: 80
+        timeout: 3
+
   rescue:
     - name: Prepare install nginx
       ansible.builtin.import_tasks:

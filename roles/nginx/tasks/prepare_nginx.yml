@@ -1,7 +1,7 @@
 ---
 - name: Prepare nginx installation
   block:
-    - name: Create {{ elk_install_dir }}
+    - name: Create paths for nginx
       ansible.builtin.file:
         path: "{{ path }}"
         state: directory
@@ -12,16 +12,25 @@
         - "{{ elk_install_dir }}/nginx/streams.d"
         - "{{ elk_install_dir }}/nginx/sites.d"
         - "{{ elk_logs_dir }}/nginx/"
-        - "{{ elk_build_dir }}/nginx/"
-        - "{{ elk_install_dir }}/nginx/cache"
+        - "{{ elk_data_dir }}/nginx/cache"
       loop_control:
         loop_var: path
 
+    # - name: Extract nginx package to remote host
+    #   ansible.builtin.unarchive:
+    #     src: "{{ elk_local_package_path }}/{{ download_packages.nginx | basename }}"
+    #     dest: "{{ elk_build_dir }}"
+    #     creates: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
+
     - name: Extract nginx package to remote host
-      ansible.builtin.unarchive:
-        src: "{{ elk_local_package_path }}/{{ download_packages.nginx | basename }}"
-        dest: "{{ elk_build_dir }}"
-        creates: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
+      import_role:
+        name: global_tasks
+        tasks_from: upload_and_download.yml
+      vars:
+        pkg_src: "{{ elk_local_package_path }}/{{ download_packages.nginx | basename }}"
+        pkg_dst: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
+        pkg_url: "{{ download_packages.nginx }}"
+        pkg_bin: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}/sbin/nginx"
 
     - name: Install yum packages
       ansible.builtin.dnf:

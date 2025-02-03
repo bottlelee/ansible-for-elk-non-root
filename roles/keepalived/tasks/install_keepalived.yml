@@ -14,13 +14,23 @@
       loop_control:
         loop_var: path
 
+    # - name: Unarchive keepalived package
+    #   ansible.builtin.unarchive:
+    #     src: downloads/{{ download_packages.keepalived | basename }}
+    #     dest: "{{ elk_build_dir }}"
+    #     owner: "{{ elk_user }}"
+    #     group: "{{ elk_group }}"
+    #     creates: "{{ elk_build_dir }}/{{ download_packages.keepalived | basename | regex_replace('.tar.gz', '') }}"
+
     - name: Unarchive keepalived package
-      ansible.builtin.unarchive:
-        src: downloads/{{ download_packages.keepalived | basename }}
-        dest: "{{ elk_build_dir }}"
-        owner: "{{ elk_user }}"
-        group: "{{ elk_group }}"
-        creates: "{{ elk_build_dir }}/{{ download_packages.keepalived | basename | regex_replace('.tar.gz', '') }}"
+      import_role:
+        name: global_tasks
+        tasks_from: upload_and_download.yml
+      vars:
+        pkg_src: "{{ elk_local_package_path }}/keepalived/{{ download_packages.keepalived | basename }}"
+        pkg_dst: "{{ elk_build_dir }}/{{ download_packages.keepalived | basename | regex_replace('.tar.gz', '') }}"
+        pkg_url: "{{ download_packages.keepalived }}"
+        pkg_bin: "{{ elk_build_dir }}/{{ download_packages.keepalived | basename | regex_replace('.tar.gz', '') }}/sbin/keepalived"
 
     - name: Install keepalived dependencies
       ansible.builtin.package:
