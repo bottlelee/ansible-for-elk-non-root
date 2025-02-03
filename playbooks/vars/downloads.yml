@@ -7,3 +7,4 @@ download_packages:
   nginx: https://nginx.org/download/nginx-1.26.2.tar.gz
   keepalived: https://keepalived.org/software/keepalived-2.3.2.tar.gz
   elastic_agent: https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-{{ elk_version }}-linux-x86_64.tar.gz
+  minio: https://dl.min.io/server/minio/release/linux-amd64/minio
