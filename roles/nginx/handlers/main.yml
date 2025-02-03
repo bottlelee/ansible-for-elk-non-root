@@ -15,10 +15,16 @@
   ansible.builtin.service:
     name: nginx
     state: restarted
-  # notify: Wait for nginx to start
 
 - name: Reload nginx
   ansible.builtin.service:
     name: nginx
     state: reloaded
-  # notify: Wait for nginx to start
+
+- name: Wait for nginx to start
+  ansible.builtin.wait_for:
+    port: 80
+    timeout: 120
+  listen:
+    - Restart nginx
+    - Reload nginx

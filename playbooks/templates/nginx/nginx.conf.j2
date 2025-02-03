@@ -11,8 +11,8 @@ events {
 }
 
 http {
-    include       {{ elk_install_dir }}/nginx/conf/mime.types;
-    default_type  application/octet-stream;
+    include                         {{ elk_install_dir }}/nginx/conf/mime.types;
+    default_type                    application/octet-stream;
 
     #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
     #                  '$status $body_bytes_sent "$http_referer" '
@@ -20,49 +20,62 @@ http {
 
     server_tokens off;
 
-    access_log  {{ elk_logs_dir }}/nginx/access.log;
+    access_log                      {{ elk_logs_dir }}/nginx/access.log;
 
-    sendfile        on;
-    tcp_nopush     on;
+    sendfile                        on;
+    tcp_nopush                      on;
 
-    keepalive_timeout  65;
+    keepalive_timeout               65;
 
-    gzip  on;
-    gzip_comp_level 5;
-    gzip_min_length 256;
-    gzip_proxied any;
-    gzip_vary on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+    gzip                            on;
+    gzip_comp_level                 5;
+    gzip_min_length                 256;
+    gzip_proxied                    any;
+    gzip_vary                       on;
+    gzip_types                      text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
-    ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
+    ssl_protocols                   TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers       on;
+    ssl_ciphers                     'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
 
-    proxy_cache_path {{ elk_install_dir }}/nginx/cache levels=1:2 keys_zone=elk_cache:10m max_size=10g inactive=60m use_temp_path=off;
-    proxy_cache_key "$scheme$request_method$host$request_uri$is_args$args";
-    proxy_cache_use_stale error timeout invalid_header updating http_500 http_502 http_503 http_504;
-    proxy_cache_lock on;
-    proxy_cache_lock_timeout 5s;
-    proxy_cache_revalidate on;
-    proxy_cache_min_uses 1;
-    proxy_cache_background_update on;
-    proxy_cache_valid 200 302 10m;
-    proxy_cache_valid 301 1h;
-    proxy_cache_valid any 1m;
+    proxy_cache_path                {{ elk_data_dir }}/nginx/cache levels=1:2 keys_zone=elk_cache:10m max_size=10g inactive=60m use_temp_path=off;
+    proxy_cache_key                 "$scheme$request_method$host$request_uri$is_args$args";
+    proxy_cache_use_stale           error timeout invalid_header updating http_500 http_502 http_503 http_504;
+    proxy_cache_lock                on;
+    proxy_cache_lock_timeout        5s;
+    proxy_cache_revalidate          on;
+    proxy_cache_min_uses            1;
+    proxy_cache_background_update   on;
+    proxy_cache_valid               200 302 10m;
+    proxy_cache_valid               301 1h;
+    proxy_cache_valid               any 1m;
 
-    client_body_buffer_size 10K;
-    client_header_buffer_size 1k;
-    large_client_header_buffers 4 32k;
-    client_max_body_size 8m;
-    client_body_timeout 12;
-    client_header_timeout 12;
-    send_timeout 10;
+    client_body_buffer_size         10K;
+    client_header_buffer_size       1k;
+    large_client_header_buffers     4 32k;
+    client_max_body_size            8m;
+    client_body_timeout             12;
+    client_header_timeout           12;
+    send_timeout                    10;
 
-    limit_conn_zone $binary_remote_addr zone=addr:10m;
-    limit_conn addr 100;
+    limit_conn_zone                 $binary_remote_addr zone=addr:10m;
+    limit_conn addr                 100;
 
-    include {{ elk_install_dir }}/nginx/sites.d/*.conf;
-    include {{ elk_install_dir }}/nginx/conf.d/*.conf;
+    include                         {{ elk_install_dir }}/nginx/sites.d/*.conf;
+
+    server {
+        listen                      80 default_server;
+        listen                      [::]:80 default_server;
+        server_name                 _;
+        return                      301 https://$host$request_uri;
+
+        location /status {
+            stub_status             on;
+            access_log              off;
+            allow                   127.0.0.1;
+            deny                    all;
+        }
+    }
 }
 
 stream {

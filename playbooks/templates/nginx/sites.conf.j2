@@ -1,26 +1,24 @@
 upstream {{ site.name }} {
     {{ site.upstream_method | default('least_conn') }};
 {% for host in site.upstreams %}
-    server {{ host }}.{{ elk_domain }}:{{ site.upstream_port | default(site.listen_port) }};
+    server                  {{ host }}.{{ elk_domain }}:{{ site.upstream_port | default(site.listen_port) }};
 {% endfor %}
 }
 
 server {
-    listen {{ site.listen_port }} ssl;
-    server_name {{ site.name }}.{{ elk_domain }};
+    listen                  {{ site.listen_port | default('443') }} ssl;
+    server_name             {{ site.name }}.{{ elk_domain }};
 
-    ssl_certificate {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.cert | basename }};
-    ssl_certificate_key {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.key | basename }};
-    #include {{ elk_install_dir }}/nginx/ssl/options-ssl-nginx.conf;
-    #ssl_dhparam {{ elk_install_dir }}/nginx/ssl/ssl-dhparams.pem;
+    ssl_certificate         {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.cert | basename }};
+    ssl_certificate_key     {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.key | basename }};
 
     location {{ site.location | default('/') }} {
-        proxy_pass {{ site.proxy_protocol }}://{{ site.name }};
-        proxy_ssl_verify {{ site.proxy_ssl_verify | default('off') }};
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass          {{ site.proxy_protocol }}://{{ site.name }};
+        proxy_ssl_verify    {{ site.proxy_ssl_verify | default('off') }};
+        proxy_set_header    Host $host;
+        proxy_set_header    X-Real-IP $remote_addr;
+        proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header    X-Forwarded-Proto $scheme;
     }
 
     error_page 404 /404.html;

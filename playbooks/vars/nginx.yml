@@ -1,7 +1,7 @@
 ---
 nginx_sites:
   - name: elasticsearch
-    listen_port: 19200
+    listen_port: 443
     location: /
     upstreams: "{{ groups['elasticsearch'] }}"
     upstream_port: "{{ elasticsearch_http_port | default('9200') }}"
@@ -19,13 +19,22 @@ nginx_sites:
     proxy_protocol: http # HTTP only, no HTTPS on the kibana side
 
   - name: fleet-server
-    listen_port: 18220
+    listen_port: 443
     location: /
     upstreams: "{{ groups['fleet_server'] }}"
     upstream_port: 8220
     upstream_method: least_conn
     proxy_ssl_verify: "off"
     proxy_protocol: https
+
+  - name: minio
+    listen_port: 443
+    location: /
+    upstreams: "{{ groups['minio'] }}"
+    upstream_port: 9001
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"
+    proxy_protocol: http # HTTP only, no HTTPS on the minio side
 
 nginx_streams:
   - name: elastic-agent
@@ -42,12 +51,12 @@ nginx_streams:
     upstream_method: least_conn
     proxy_ssl_verify: "off"
 
-  - name: elasticsearch-transport
-    listen_port: 19300
-    upstreams: "{{ groups['es_master'] }}"
-    upstream_port: 9300
-    upstream_method: least_conn
-    proxy_ssl_verify: "off"
+  # - name: elasticsearch-transport
+  #   listen_port: 19300
+  #   upstreams: "{{ groups['es_master'] }}"
+  #   upstream_port: 9300
+  #   upstream_method: least_conn
+  #   proxy_ssl_verify: "off"
 
 nginx_compile_args:
   - --prefix={{ elk_install_dir }}/nginx
@@ -62,19 +71,13 @@ nginx_compile_args:
   - --with-poll_module
   - --http-log-path={{ elk_logs_dir }}/nginx/access.log
 
-nginx_compile_args_hash: "{{ nginx_compile_args | sort | hash('md5') }}"
+nginx_compile_args_hash: "{{ nginx_compile_args | sort | trim | hash('md5') }}"
 
 nginx_compile_tools:
   - gcc
   - pcre-devel
   - zlib-devel
   - openssl-devel
-
-# Gateway addresses shortcut
-# nginx_kibana_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'kibana') | map(attribute='virtual_ipaddress') | first }}"
-# nginx_logstash_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'logstash') | map(attribute='virtual_ipaddress') | first }}"
-# nginx_elasticsearch_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'elasticsearch') | map(attribute='virtual_ipaddress') | first }}"
-# nginx_fleet_server_vrrp_address: "{{ keepalived_vrrp_instances | selectattr('name', 'eq', 'fleet-server') | map(attribute='virtual_ipaddress') | first }}"
 
 # Nginx certificates local path, if file not exists, self-sign certificates will be generated
 # You can overwrite the auto-gen certificates by providing your own certificates

@@ -1,17 +1,14 @@
 upstream {{ stream.name }} {
     {{ stream.upstream_method | default('least_conn') }};
 {% for host in stream.upstreams %}
-    server {{ host }}.{{ elk_domain }}:{{ stream.upstream_port | default(stream.listen_port) }};
+    server              {{ host }}.{{ elk_domain }}:{{ stream.upstream_port | default(stream.listen_port) }};
 {% endfor %}
 }
 
 server {
-    listen {{ stream.listen_port }} ssl;
-
-    ssl_certificate {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.cert | basename }};
+    listen              {{ stream.listen_port }} ssl;
+    ssl_certificate     {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.cert | basename }};
     ssl_certificate_key {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.key | basename }};
-    #include {{ elk_install_dir }}/nginx/ssl/options-ssl-nginx.conf;
-    #ssl_dhparam {{ elk_install_dir }}/nginx/ssl/ssl-dhparams.pem;
-
-    proxy_pass {{ stream.name }};
+    proxy_pass          {{ stream.name }};
+    proxy_ssl_verify    {{ stream.proxy_ssl_verify | default('off') }};
 }
