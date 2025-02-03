@@ -1,0 +1,96 @@
+---
+- name: Install elastic agent
+  block:
+    - name: Tips
+      ansible.builtin.debug:
+        msg: "Extracting package to target host..."
+
+    - name: Upload package
+      ansible.builtin.unarchive:
+        src: "{{ elastic_agent_local_dir }}/{{ item }}"
+        dest: /var/lib/
+        creates: /var/lib/elastic-agent/elastic-agent
+      with_items:
+        - "{{ elastic_agent_dl }}"
+        - "{{ elastic_agent_dl }}.sha512"
+        - "{{ elastic_agent_dl }}.asc"
+
+    - name: Create soft link /var/lib/elastic-agent
+      ansible.builtin.file:
+        src: /var/lib/{{ elastic_agent_dir }}
+        dest: /var/lib/elastic-agent
+        state: link
+
+    - name: Create some paths
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0750"
+      with_items:
+        - /var/lib/elastic-agent/tls
+        - "{{ elk_logs_root_path }}/elastic-agent"
+
+    - name: Upload TLS files
+      ansible.builtin.copy:
+        src: "{{ inventory_dir }}/credentials/{{ item }}"
+        dest: /var/lib/elastic-agent/tls/
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0440"
+      with_items:
+        - elastic-certificates.p12
+        - elastic-stack-ca.p12
+        - uat-certificate.pem
+        - uat-certificate.key
+
+    - name: Install fleet server
+      ansible.builtin.import_tasks: server.yml
+      when: "'fleet_server' in group_names"
+
+    - name: Install elastic agent
+      ansible.builtin.import_tasks: agent.yml
+      when: "'fleet_server' not in group_names"
+
+  rescue:
+    - name: Create local path {{ elastic_agent_local_dir }}
+      ansible.builtin.file:
+        path: "{{ elastic_agent_local_dir }}"
+        state: directory
+        mode: "0750"
+      delegate_to: localhost
+      become: false
+
+    - name: Tips
+      ansible.builtin.debug:
+        msg: |
+          Starting download package from {{ elastic_agent_dl }}
+          Please wait...
+
+    - name: Download package
+      ansible.builtin.get_url:
+        url: "{{ item }}"
+        dest: "{{ elastic_agent_local_dir }}/"
+      with_items:
+        - "{{ elastic_agent_dl }}"
+        - "{{ elastic_agent_dl }}.sha512"
+        - "{{ elastic_agent_dl }}.asc"
+      delegate_to: localhost
+      become: false
+      register: dl_st
+      until: dl_st is succeeded
+      retries: 20
+      delay: 5
+
+    - name: Checksum
+      ansible.builtin.stat:
+        path: "{{ elastic_agent_local_dir }}/{{ elastic_agent_pkg }}"
+        checksum_algorithm: sha512
+      register: checksum
+      vars:
+        sha512_file: "{{ elastic_agent_local_dir }}/{{ elastic_agent_pkg }}.sha512"
+      failed_when: checksum.checksum != lookup('file', sha512_file)
+
+    - name: Repeat tasks
+      ansible.builtin.include_tasks: install.yml

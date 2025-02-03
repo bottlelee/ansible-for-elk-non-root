@@ -1,0 +1,28 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for elastic_agent
+
+- name: Tasks for elastic agent
+  block:
+    - name: Checking service status
+      ansible.builtin.service:
+        name: elastic-agent
+        state: started
+        enabled: true
+        daemon_reload: true
+
+    - name: Checking service health
+      ansible.builtin.command: "{{ elk_install_dir }}/Elastic/Agent/elastic-agent status"
+      changed_when: false
+      register: agent_st
+      failed_when: >-
+        'FAILED' in agent_st.stdout
+
+  rescue:
+    # - name: Check service token
+    #   ansible.builtin.import_tasks:
+    #     file: service_token.yml
+
+    - name: Install elastic-agent
+      ansible.builtin.import_tasks:
+        file: install.yml
