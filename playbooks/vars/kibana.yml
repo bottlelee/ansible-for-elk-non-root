@@ -1,11 +1,11 @@
 ---
-# Must be per setting in one line
 kibana_port: 5601
 
+# BEWARE: Must be per setting in one line
 kibana_config:
   server.port: "{{ kibana_port }}"
   server.host: 0.0.0.0
-  server.name: "{{ inventory_hostname | default(ansible_hostname) }}"
+  server.name: "{{ inventory_hostname }}.{{ elk_domain }} "
   csp.strict: true
   elasticsearch.requestTimeout: 90000
   logging.appenders.default.fileName: "{{ elk_logs_dir }}/kibana/kibana.log"
@@ -17,10 +17,19 @@ kibana_config:
   logging.appenders.default.type: rolling-file
   xpack.security.session.lifespan: 7d
   xpack.security.session.idleTimeout: 3d
+  path.data: "{{ elk_data_dir }}/kibana"
+  server.publicBaseUrl: "https://kibana.{{ elk_domain }}"
+  xpack.security.encryptionKey: "{{ lookup('password', inventory_dir + '/credentials/kibana/security_encryptionKey length=32 chars=ascii_letters,digits') }}"
+  xpack.encryptedSavedObjects.encryptionKey: "{{ lookup('password', inventory_dir + '/credentials/kibana/encryptedSavedObjects_encryptionKey length=32 chars=ascii_letters,digits') }}"
+
+kibana_gateway_url: "https://kibana.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'kibana') | map(attribute='listen_port') | first }}"
+
+kibana_keystore:
   xpack.security.encryptionKey: "{{ lookup('password', inventory_dir + '/credentials/kibana/security_encryptionKey length=32 chars=ascii_letters,digits') }}"
   xpack.encryptedSavedObjects.encryptionKey: "{{ lookup('password', inventory_dir + '/credentials/kibana/encryptedSavedObjects_encryptionKey length=32 chars=ascii_letters,digits')
     }}"
-  path.data: "{{ elk_data_dir }}/kibana"
-  server.publicBaseUrl: "https://kibana.{{ elk_domain }}"
 
-kibana_gateway_url: "https://kibana.{{ elk_domain }}:{{ nginx_sites | selectattr('name', 'eq', 'kibana') | map(attribute='listen_port') | first }}"
+# Options with prefix '#' will be commented out in {{ elk_install_dir }}/kibana/config/node.options
+kibana_nodejs_options:
+  - "#--openssl-legacy-provider" # https://www.elastic.co/guide/en/kibana/{{ elk_version }}/production.html#openssl-legacy-provider
+  - "--unhandled-rejections=warn"

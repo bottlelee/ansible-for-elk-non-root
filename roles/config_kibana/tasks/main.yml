@@ -1,8 +1,33 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for config_kibana
-- name: Update kibana.yml
+- name: Create kibana keystore file
+  ansible.builtin.command:
+    argv:
+      - "{{ elk_install_dir }}/kibana/bin/kibana-keystore"
+      - create
+    creates: "{{ elk_install_dir }}/kibana/config/kibana.keystore"
+
+- name: Config keystore
+  ansible.builtin.include_tasks:
+    file: keystore.yml
+  with_dict: "{{ kibana_keystore }}"
+  loop_control:
+    loop_var: keystore
+    label: "{{ keystore.key }}"
+
+- name: Update {{ elk_install_dir }}/kibana/config/kibana.yml
   ansible.builtin.blockinfile:
     path: "{{ elk_install_dir }}/kibana/config/kibana.yml"
     block: "{{ kibana_config | to_nice_yaml(indent=2) }}"
+  notify: Restart kibana
+
+- name: Update {{ elk_install_dir }}/kibana/config/node.options
+  ansible.builtin.lineinfile:
+    path: "{{ elk_install_dir }}/kibana/config/node.options"
+    line: "{{ opt }}"
+    regex: .*{{ opt | replace('#', '') }}$
+  loop: "{{ kibana_nodejs_options }}"
+  loop_control:
+    loop_var: opt
   notify: Restart kibana

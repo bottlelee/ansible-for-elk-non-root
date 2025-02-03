@@ -2,7 +2,19 @@
 ---
 # handlers file for config_kibana
 
-- name: Restart kibana
+- name: Restarting kibana
   ansible.builtin.service:
     name: kibana
     state: restarted
+  listen:
+    - Restart kibana
+
+- name: Wait for kibana to start
+  ansible.builtin.uri:
+    url: http://{{ ansible_host }}:5601/api/status
+  register: kibana_status
+  until: kibana_status.status == 200
+  retries: 12
+  delay: 10
+  listen:
+    - Restart kibana
