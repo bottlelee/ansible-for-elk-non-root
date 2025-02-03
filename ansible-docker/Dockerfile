@@ -6,7 +6,7 @@ ARG SEMAPHORE_USER_ID=1000
 USER root
 
 RUN apk add --no-cache --upgrade fish htop byobu sshpass nano shadow tzdata wget \
-  openssh-client curl gcc make zlib-dev libffi-dev openssl-dev musl-dev \
+  openssh-client curl gcc make zlib-dev libffi-dev openssl-dev musl-dev file \
   && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 ## Download and extract Python source
