@@ -8,17 +8,17 @@
     - upload
     - download
 
-- name: Print info of {{ pkg_src }}
-  ansible.builtin.debug:
-    msg: "{{ pkg_src_stat.stat }}"
-  when: pkg_src_stat.stat.exists
-  tags:
-    - upload
-    - download
+# - name: Print info of {{ pkg_src }}
+#   ansible.builtin.debug:
+#     msg: "{{ pkg_src_stat.stat }}"
+#   when: pkg_src_stat.stat.exists
+#   tags:
+#     - upload
+#     - download
 
 - name: Tasks for download
   block:
-    - name: Create local packages path under {{ pkg_src | dirname }}
+    - name: "Create local package store path '{{ pkg_src | dirname }}'"
       ansible.builtin.file:
         path: "{{ pkg_src | dirname }}"
         state: directory
@@ -29,6 +29,7 @@
         url: "{{ pkg_url }}"
         dest: "{{ pkg_src }}"
         mode: "0444"
+        backup: true
       register: download_result
       until: download_result is succeeded
       retries: 3
@@ -45,7 +46,7 @@
 
 - name: Tasks for upload
   block:
-    - name: Create remote package path under {{ pkg_dst }}
+    - name: "Create remote package path '{{ pkg_dst }}'"
       ansible.builtin.file:
         path: "{{ pkg_dst }}"
         state: directory
@@ -53,11 +54,11 @@
         owner: "{{ pkg_owner | default(elk_user) }}"
         group: "{{ pkg_group | default(elk_group) }}"
 
-    - name: Set 'pkg_is_archived=true' when file is compressed
+    - name: The package is a compressed archive
       ansible.builtin.set_fact:
-        pkg_is_archived: trued
+        pkg_is_archived: true
       when:
-        - pkg_src_stat.stat.mimetype | regex_search("(tar|zip|bzip2|gzip|xz|tar-gz|tar-xz|rar-compressed)$")
+        - pkg_src_stat.stat.mimetype | regex_search("(tar|zip|bzip2|gzip|xz|rar-compressed)$")
 
     - name: Extracting {{ pkg_src }} to {{ pkg_dst }}
       ansible.builtin.unarchive:
@@ -68,7 +69,7 @@
         group: "{{ pkg_group | default(elk_group) }}"
         extra_opts:
           - --strip-components=1
-      when: pkg_is_archived
+      when: pkg_is_archived is defined
 
     - name: Copy {{ pkg_src }} to {{ pkg_dst }}
       ansible.builtin.copy:
@@ -76,6 +77,8 @@
         dest: "{{ pkg_dst }}"
         owner: "{{ pkg_owner | default(elk_user) }}"
         group: "{{ pkg_group | default(elk_group) }}"
-      when: not pkg_is_archived
+        mode: "{{ pkg_mode | default('0444') }}"
+        backup: true
+      when: pkg_is_archived is not defined
   tags:
     - upload
