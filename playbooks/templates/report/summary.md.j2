@@ -1,0 +1,25 @@
+{{ lookup('template', 'report/style.css.j2') }}
+
+# {{ elk_env | upper }} - ELK DEPLOY SUMMARY
+
+Last update: {{ ansible_date_time.iso8601_basic_short }}
+
+## Hosts
+
+{{ lookup('template', 'report/hosts.html.j2') }}
+
+## Services
+
+{{ lookup('template', 'report/services.html.j2') }}
+
+## Elasticsearch Built-in Users
+
+{{ lookup('template', 'report/elastic_users.html.j2') }}
+
+## Keepalived
+
+{{ lookup('template', 'report/keepalived.html.j2') }}
+
+## Nginx
+
+{{ lookup('template', 'report/nginx.html.j2') }}

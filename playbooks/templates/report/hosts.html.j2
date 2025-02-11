@@ -1,0 +1,14 @@
+<table>
+  <tr>
+    <th>Hostname</th>
+    <th>IP</th>
+    <th>Groups</th>
+  </tr>
+{% for host in groups['all'] %}
+  <tr>
+    <td>{{ host }}</td>
+    <td>{{ hostvars[host]['ansible_host'] }}</td>
+    <td style="text-align: left;">{{ hostvars[host]['group_names'] | sort | join(', ') }}</td>
+ </tr>
+{% endfor %}
+</table>

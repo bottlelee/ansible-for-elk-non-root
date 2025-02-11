@@ -1,0 +1,44 @@
+---
+- name: Create report path
+  ansible.builtin.file:
+    path: "{{ inventory_dir }}/report"
+    state: directory
+    mode: "0755"
+
+- name: Generate summary report
+  ansible.builtin.template:
+    src: report/summary.md.j2
+    dest: "{{ inventory_dir }}/report/summary.md"
+    mode: "0644"
+
+- name: Convert markdown to html
+  ansible.builtin.command:
+    argv:
+      - pandoc
+      - --from
+      - markdown
+      - --to
+      - html
+      - -V
+      - toc:true
+      - --output
+      - "{{ inventory_dir }}/report/summary.html"
+      - "{{ inventory_dir }}/report/summary.md"
+  changed_when: false
+
+- name: Convert html to pdf
+  ansible.builtin.command:
+    argv:
+      - pandoc
+      - --from
+      - html
+      - --to
+      - pdf
+      - -V
+      - toc:true
+      - -V
+      - geometry:landscape
+      - --output
+      - "{{ inventory_dir }}/report/summary.pdf"
+      - "{{ inventory_dir }}/report/summary.html"
+  changed_when: false

@@ -1,0 +1,38 @@
+<table>
+  <tr>
+    <th>Service</th>
+    <th>URL</th>
+    <th>Username</th>
+    <th>Password</th>
+  </tr>
+  <tr>
+    <td>Elasticsearch</td>
+    <td>
+        <a href="https://elasticsearch.{{ elk_domain }}" target=_blank>
+            https://elasticsearch.{{ elk_domain }}
+        </a>
+    </td>
+    <td>elastic</td>
+    <td>{{ elasticsearch_elastic_password }}</td>
+ </tr>
+  <tr>
+    <td>Kibana</td>
+    <td>
+        <a href="https://kibana.{{ elk_domain }}" target=_blank>
+            https://kibana.{{ elk_domain }}
+        </a>
+    </td>
+    <td>elastic</td>
+    <td>{{ elasticsearch_elastic_password }}</td>
+ </tr>
+  <tr>
+    <td>Minio</td>
+    <td>
+        <a href="https://minio.{{ elk_domain }}" target=_blank>
+            https://minio.{{ elk_domain }}
+        </a>
+    </td>
+    <td>{{ minio_root_user }}</td>
+    <td>{{ minio_root_pass }}</td>
+ </tr>
+</table>

@@ -1,2 +1,8 @@
 ---
 # tasks file for report
+
+- name: Local tasks
+  ansible.builtin.import_tasks:
+    file: local_tasks.yml
+  delegate_to: localhost
+  run_once: true

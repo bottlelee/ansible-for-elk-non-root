@@ -1,0 +1,45 @@
+### Sites
+
+<table>
+  <tr>
+    <th>Site</th>
+    <th>URL</th>
+    <th>Upstreams</th>
+    <th>Load-balance Strategy</th>
+  </tr>
+{% for site in (nginx_sites | sort(attribute='name')) %}
+  <tr>
+    <td>{{ site.name }}</td>
+    <td>https://{{ site.name }}.{{ elk_domain }}:{{ site.listen_port }}</td>
+    <td>
+      {% for upstream in site.upstreams %}
+        {{ upstream }}.{{ elk_domain }}:{{ site.upstream_port }}<br/>
+      {% endfor %}
+    </td>
+    <td>{{ site.upstream_method }}</td>
+ </tr>
+{% endfor %}
+</table>
+
+### Streams
+
+<table>
+  <tr>
+    <th>Stream</th>
+    <th>Proxy Port</th>
+    <th>Upstreams</th>
+    <th>Load-balance Strategy</th>
+  </tr>
+{% for stream in (nginx_streams | sort(attribute='name')) %}
+  <tr>
+    <td>{{ stream.name }}</td>
+    <td>{{ stream.name }}.{{ elk_domain }}:{{ stream.listen_port }}</td>
+    <td>
+      {% for upstream in stream.upstreams %}
+        {{ upstream }}.{{ elk_domain }}:{{ stream.upstream_port }}<br/>
+      {% endfor %}
+    </td>
+    <td>{{ stream.upstream_method }}</td>
+ </tr>
+{% endfor %}
+</table>

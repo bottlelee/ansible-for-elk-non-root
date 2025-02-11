@@ -1,0 +1,22 @@
+<table>
+  <tr>
+    <th>Service</th>
+    <th>VIP</th>
+    <th>Interface</th>
+    <th>Master Node</th>
+    <th>Backup Nodes</th>
+  </tr>
+{% for instance in (keepalived_vrrp_instances | sort(attribute='virtual_ipaddress')) %}
+  <tr>
+    <td>{{ instance.name }}</td>
+    <td>{{ instance.virtual_ipaddress }}</td>
+    <td>{{ instance.interface }}</td>
+    <td>{{ instance.master }}</td>
+    <td>
+      {% for host in groups['nginx'] if host != instance.master %}
+        {{ host }}
+      {% endfor %}
+    </td>
+ </tr>
+{% endfor %}
+</table>

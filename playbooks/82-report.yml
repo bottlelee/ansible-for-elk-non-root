@@ -1,0 +1,9 @@
+---
+- name: Generate deploy report
+  hosts: all
+  become: false
+  gather_facts: false
+  roles:
+    - name: pre_tasks
+      run_once: true
+    - report

@@ -1,0 +1,12 @@
+<table>
+  <tr>
+    <th>Username</th>
+    <th>Password</th>
+  </tr>
+{% for user in elasticsearch_builtin_users %}
+  <tr>
+    <td>{{ user }}</td>
+    <td>{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_' + user) }}</td>
+ </tr>
+{% endfor %}
+</table>
