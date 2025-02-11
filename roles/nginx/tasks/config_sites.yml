@@ -1,0 +1,33 @@
+- name: Create site '{{ site.name }}' logs directory
+  ansible.builtin.file:
+    path: "{{ elk_logs_dir }}/nginx/{{ site.name }}"
+    state: directory
+    mode: "0750"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+
+- name: Touch site '{{ site.name }}' log files
+  ansible.builtin.file:
+    path: "{{ site_file }}"
+    state: touch
+    mode: "0640"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+  changed_when: false
+  with_items:
+    - access
+    - error
+  loop_control:
+    loop_var: type
+    label: "{{ site_file }}"
+  vars:
+    site_file: "{{ elk_logs_dir }}/nginx/{{ site.name }}/{{ site.name }}-{{ type }}.log"
+
+- name: Update site '{{ site.name }}' config file
+  ansible.builtin.template:
+    src: nginx/sites.conf.j2
+    dest: "{{ elk_install_dir }}/nginx/sites.d/{{ site.name }}.conf"
+    mode: "0640"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+  notify: Reload nginx

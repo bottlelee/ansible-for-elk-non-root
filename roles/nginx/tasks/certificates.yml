@@ -25,6 +25,7 @@
         label: "{{ file_dest }}"
       vars:
         file_dest: "{{ elk_install_dir }}/nginx/ssl/{{ file_path | basename }}"
+      notify: Restart nginx
 
   rescue:
     - name: Generate certificates on ansible controller
@@ -38,14 +39,61 @@
             state: directory
             mode: "0750"
 
-        - name: Generate self-signed certificates
+        - name: Create private key (RSA, 4096 bits)
           community.crypto.openssl_privatekey:
             path: "{{ nginx_certificates.key }}"
 
-        - name: Create simple self-signed certificate
+        - name: Create a certificate signing request (CSR)
+          community.crypto.openssl_csr:
+            path: "{{ nginx_certificates.csr.file }}"
+            privatekey_path: "{{ nginx_certificates.key }}"
+            common_name: "{{ elk_domain }}"
+            country_name: "{{ nginx_certificates.csr.country_name }}"
+            state_or_province_name: "{{ nginx_certificates.csr.state_or_province_name }}"
+            locality_name: "{{ nginx_certificates.csr.locality_name }}"
+            organization_name: "{{ nginx_certificates.csr.organization_name }}"
+            organizational_unit_name: "{{ nginx_certificates.csr.organizational_unit_name }}"
+            email_address: "{{ nginx_certificates.csr.email_address }}"
+            authority_cert_issuer: "{{ nginx_certificates.csr.authority_cert_issuer }}"
+            authority_cert_serial_number: "{{ nginx_certificates.csr.authority_cert_serial_number }}"
+
+        - name: Create a self-signed certificate
           community.crypto.x509_certificate:
             path: "{{ nginx_certificates.cert }}"
             privatekey_path: "{{ nginx_certificates.key }}"
+            csr_path: "{{ nginx_certificates.csr.file }}"
             provider: selfsigned
+
     - name: Repeat tasks
       ansible.builtin.include_tasks: certificates.yml
+
+# Fix the certificate problem for elasticsearch create enrollment token issue with '--url' option
+# - name: Import CA certificate to Java keystore
+#   block:
+#     - name: Upload CA file to Java keystore path
+#       ansible.builtin.copy:
+#         src: "{{ nginx_certificates.cert }}"
+#         dest: "{{ elk_install_dir }}/elasticsearch/jdk/lib/security/"
+#         owner: "{{ elk_user }}"
+#         group: "{{ elk_group }}"
+#         mode: "0640"
+#         backup: true
+#       delegate_to: "{{ host }}"
+#       loop: "{{ groups['elasticsearch'] }}"
+#       loop_control:
+#         loop_var: host
+
+#     - name: Import CA certificate to Java keystore
+#       community.general.java_cert:
+#         cert_path: "{{ elk_install_dir }}/elasticsearch/jdk/lib/security/{{ nginx_certificates.cert | basename }}"
+#         keystore_path: "{{ elk_install_dir }}/elasticsearch/jdk/lib/security/{{ elk_env }}.keystore"
+#         keystore_pass: "{{ lookup('password', inventory_dir + '/credentials/java_keystore_password') }}"
+#         keystore_create: true
+#         state: present
+#         cert_alias: "{{ elk_env }}.{{ elk_domain }}"
+#         trust_cacert: true
+#         executable: "{{ elk_install_dir }}/elasticsearch/jdk/bin/keytool"
+#       delegate_to: "{{ host }}"
+#       loop: "{{ groups['elasticsearch'] }}"
+#       loop_control:
+#         loop_var: host

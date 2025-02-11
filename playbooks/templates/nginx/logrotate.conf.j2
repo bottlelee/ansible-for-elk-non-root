@@ -1,0 +1,15 @@
+{{ elk_logs_dir }}/nginx/*.log
+{{ elk_logs_dir }}/nginx/*/*.log
+{
+    missingok
+    rotate 14
+    compress
+    minsize 250M
+    delaycompress
+    notifempty
+    create 0640 {{ elk_user }} {{ elk_group }}
+    sharedscripts
+    postrotate
+        [ -f {{ elk_logs_dir }}/nginx/nginx.pid ] && systemctl reload nginx > /dev/null
+    endscript
+}

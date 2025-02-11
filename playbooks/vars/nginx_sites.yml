@@ -1,0 +1,37 @@
+---
+nginx_sites:
+  - name: elasticsearch
+    listen_port: 443
+    location: /
+    upstreams: "{{ groups['es_master'] }}"
+    upstream_port: "{{ elasticsearch_http_port | default('9200') }}"
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"
+    proxy_protocol: https
+
+  - name: kibana
+    listen_port: 443
+    location: /
+    upstreams: "{{ groups['kibana'] }}"
+    upstream_port: "{{ kibana_port | default('5601') }}"
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"
+    proxy_protocol: http # HTTP only, no HTTPS on the kibana side
+
+  - name: fleet-server
+    listen_port: 443
+    location: /
+    upstreams: "{{ groups['fleet_server'] }}"
+    upstream_port: 8220
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"
+    proxy_protocol: https
+
+  - name: minio
+    listen_port: 443
+    location: /
+    upstreams: "{{ groups['minio'] }}"
+    upstream_port: 9001
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"
+    proxy_protocol: http # HTTP only, no HTTPS on the minio side

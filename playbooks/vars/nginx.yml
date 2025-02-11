@@ -1,63 +1,4 @@
 ---
-nginx_sites:
-  - name: elasticsearch
-    listen_port: 443
-    location: /
-    upstreams: "{{ groups['elasticsearch'] }}"
-    upstream_port: "{{ elasticsearch_http_port | default('9200') }}"
-    upstream_method: least_conn
-    proxy_ssl_verify: "off"
-    proxy_protocol: https
-
-  - name: kibana
-    listen_port: 443
-    location: /
-    upstreams: "{{ groups['kibana'] }}"
-    upstream_port: "{{ kibana_port | default('5601') }}"
-    upstream_method: least_conn
-    proxy_ssl_verify: "off"
-    proxy_protocol: http # HTTP only, no HTTPS on the kibana side
-
-  - name: fleet-server
-    listen_port: 443
-    location: /
-    upstreams: "{{ groups['fleet_server'] }}"
-    upstream_port: 8220
-    upstream_method: least_conn
-    proxy_ssl_verify: "off"
-    proxy_protocol: https
-
-  - name: minio
-    listen_port: 443
-    location: /
-    upstreams: "{{ groups['minio'] }}"
-    upstream_port: 9001
-    upstream_method: least_conn
-    proxy_ssl_verify: "off"
-    proxy_protocol: http # HTTP only, no HTTPS on the minio side
-
-nginx_streams:
-  - name: elastic-agent
-    listen_port: 15044
-    upstreams: "{{ groups['logstash'] }}"
-    upstream_port: 5044
-    upstream_method: least_conn
-    proxy_ssl_verify: "off"
-
-  - name: logstash-input
-    listen_port: 19800
-    upstreams: "{{ groups['logstash'] }}"
-    upstream_port: 9800
-    upstream_method: least_conn
-    proxy_ssl_verify: "off"
-
-  # - name: elasticsearch-transport
-  #   listen_port: 19300
-  #   upstreams: "{{ groups['es_master'] }}"
-  #   upstream_port: 9300
-  #   upstream_method: least_conn
-  #   proxy_ssl_verify: "off"
-
 nginx_compile_args:
   - --prefix={{ elk_install_dir }}/nginx
   - --with-http_ssl_module
@@ -65,11 +6,15 @@ nginx_compile_args:
   - --with-http_v3_module
   - --with-http_stub_status_module
   - --with-http_gzip_static_module
+  - --with-http_realip_module
   - --with-stream
   - --with-stream_ssl_module
+  - --with-stream_realip_module
+  - --with-threads
   - --with-pcre
   - --with-poll_module
   - --http-log-path={{ elk_logs_dir }}/nginx/access.log
+  - --error-log-path={{ elk_logs_dir }}/nginx/error.log
 
 nginx_compile_args_hash: "{{ nginx_compile_args | sort | trim | hash('md5') }}"
 
@@ -84,4 +29,20 @@ nginx_compile_tools:
 nginx_certificates:
   key: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.key"
   cert: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.crt"
-  ca: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.ca"
+  csr:
+    file: "{{ inventory_dir }}/credentials/nginx/{{ elk_domain }}.csr"
+    common_name: "{{ elk_domain }}"
+    country_name: "CN"
+    state_or_province_name: "Macau"
+    locality_name: "Macau"
+    organization_name: "CTI"
+    organizational_unit_name: "IT"
+    email_address: "haibin.li@technet.com.mo"
+    authority_cert_issuer:
+      - "DNS:{{ elk_domain }}"
+      - "DNS:kibana.{{ elk_domain }}"
+      - "DNS:elasticsearch.{{ elk_domain }}"
+      - "DNS:minio.{{ elk_domain }}"
+      - "DNS:logstash.{{ elk_domain }}"
+      - "DNS:fleet-server.{{ elk_domain }}"
+    authority_cert_serial_number: "0"

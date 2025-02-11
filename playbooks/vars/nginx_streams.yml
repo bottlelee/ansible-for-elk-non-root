@@ -1,0 +1,22 @@
+---
+nginx_streams:
+  - name: elastic-agent
+    listen_port: 15044
+    upstreams: "{{ groups['logstash'] }}"
+    upstream_port: 5044
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"
+
+  - name: logstash-input
+    listen_port: 19800
+    upstreams: "{{ groups['logstash'] }}"
+    upstream_port: 9800
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"
+
+  - name: elasticsearch-http
+    listen_port: 19200
+    upstreams: "{{ groups['elasticsearch'] }}"
+    upstream_port: 9200
+    upstream_method: least_conn
+    proxy_ssl_verify: "off"

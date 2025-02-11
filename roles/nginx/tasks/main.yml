@@ -7,18 +7,15 @@
     - name: Checking if nginx configure args has been changed
       ansible.builtin.copy:
         content: "{{ nginx_compile_args_hash }}"
-        dest: "{{ inventory_dir }}/files/nginx_compile_args_hash"
+        dest: "{{ inventory_dir }}/files/nginx_{{ inventory_hostname }}_compile_args_hash"
         mode: "0640"
       delegate_to: localhost
       register: nginx_compile_args_hash_result
-      run_once: true
 
     - name: Install nginx
       ansible.builtin.import_tasks:
         file: install_nginx.yml
-      when: >-
-        nginx_compile_args_hash_result is changed
-          or rebuild is true
+      when: nginx_compile_args_hash_result is changed or rebuild
 
     - name: Checking nginx service status
       ansible.builtin.service:
@@ -44,6 +41,43 @@
       ansible.builtin.import_tasks:
         file: certificates.yml
 
-    - name: Config nginx
-      ansible.builtin.import_tasks:
-        file: config_nginx.yml
+    - name: Config nginx sites
+      ansible.builtin.include_tasks:
+        file: config_sites.yml
+      loop: "{{ nginx_sites }}"
+      loop_control:
+        loop_var: site
+        label: "{{ site.name }}"
+
+    - name: Update stream files
+      ansible.builtin.template:
+        src: nginx/streams.conf.j2
+        dest: "{{ elk_install_dir }}/nginx/streams.d/{{ stream.name }}.conf"
+        mode: "0640"
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+      loop: "{{ nginx_streams }}"
+      loop_control:
+        loop_var: stream
+        label: "{{ stream.name }}"
+      notify: Reload nginx
+
+    - name: Update nginx.conf
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/nginx/nginx.conf.j2"
+        dest: "{{ elk_install_dir }}/nginx/conf/nginx.conf"
+        mode: "0640"
+        owner: "{{ elk_user }}"
+        group: "{{ elk_group }}"
+        validate: "{{ elk_install_dir }}/nginx/sbin/nginx -t -c %s"
+      notify: Restart nginx
+
+    - name: Config logroate
+      ansible.builtin.import_role:
+        name: global_tasks
+        tasks_from: config_logrotate
+      vars:
+        logrotate_tpl: "nginx/logrotate.conf.j2"
+        logrotate_dst: "{{ elk_install_dir }}/nginx/conf/logrotate.conf"
+        logrotate_app: "nginx"
+        logrotate_minute: "0"

@@ -9,6 +9,9 @@ server {
     listen                  {{ site.listen_port | default('443') }} ssl;
     server_name             {{ site.name }}.{{ elk_domain }};
 
+    access_log              {{ elk_logs_dir }}/nginx/{{ site.name }}/{{ site.name }}-access.log;
+    error_log               {{ elk_logs_dir }}/nginx/{{ site.name }}/{{ site.name }}-error.log;
+
     ssl_certificate         {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.cert | basename }};
     ssl_certificate_key     {{ elk_install_dir }}/nginx/ssl/{{ nginx_certificates.key | basename }};
 
@@ -21,12 +24,12 @@ server {
         proxy_set_header    X-Forwarded-Proto $scheme;
     }
 
-    error_page 404 /404.html;
+    error_page              404 /404.html;
     location = /404.html {
         internal;
     }
 
-    error_page 500 502 503 504 /50x.html;
+    error_page              500 502 503 504 /50x.html;
     location = /50x.html {
         internal;
     }
