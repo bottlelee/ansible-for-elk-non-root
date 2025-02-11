@@ -6,6 +6,7 @@
   run_once: true
   roles:
     - role: pre_tasks
+      tags: always
 
 - name: Config ES masters
   hosts: es_master
@@ -38,6 +39,16 @@
   roles:
     - role: config_elasticsearch
       tags: elasticsearch
+
+- name: Config Elasticsearch with API
+  hosts: es_master[0]
+  become: false
+  gather_facts: false
+  roles:
+    - role: elasticsearch_api
+      tags:
+        - elasticsearch_api
+        - es_api
 
 - name: Config Kibana
   hosts: kibana

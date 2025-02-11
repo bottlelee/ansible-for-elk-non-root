@@ -5,9 +5,10 @@ kibana_port: 5601
 kibana_config:
   server.port: "{{ kibana_port }}"
   server.host: 0.0.0.0
-  server.name: "{{ inventory_hostname }}.{{ elk_domain }} "
+  server.name: "{{ inventory_hostname }}.{{ elk_domain }}"
   csp.strict: true
   elasticsearch.requestTimeout: 90000
+  elasticsearch.ssl.verificationMode: "none"
   logging.appenders.default.fileName: "{{ elk_logs_dir }}/kibana/kibana.log"
   logging.appenders.default.layout.type: json
   logging.appenders.default.policy.size: 256mb

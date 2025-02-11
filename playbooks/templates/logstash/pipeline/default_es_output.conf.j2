@@ -1,0 +1,11 @@
+elasticsearch {
+  hosts => [
+{% for es in groups['es_hot'] %}
+    "{{ es }}.{{ elk_domain }}:{{ elasticsearch_http_port }}"{{ "," if not loop.last }}
+{% endfor %}
+  ]
+  user => "logstash_writer"
+  password => "${LOGSTASH_WRITER_PASS}"
+  ssl_enabled => true
+  ssl_verification_mode => "none"
+}

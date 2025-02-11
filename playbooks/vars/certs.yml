@@ -1,3 +1,0 @@
----
-certs_ca_password: "{{ lookup('password', inventory_dir + '/credentials/certs/ca_password length=16 chars=ascii_letters,digits,hexdigits') }}"
-certs_cert_password: "{{ lookup('password', inventory_dir + '/credentials/certs/cert_password length=16 chars=ascii_letters,digits,hexdigits') }}"

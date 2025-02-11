@@ -10,7 +10,7 @@
     - name: Checking if keepalived configure args has been changed
       ansible.builtin.copy:
         content: "{{ keepalived_configure_args_hash }}"
-        dest: "{{ inventory_dir }}/files/keepalived_configure_args_hash"
+        dest: "{{ inventory_dir }}/files/keepalived_{{ inventory_hostname }}_configure_args_hash"
         mode: "0640"
       delegate_to: localhost
       register: keepalived_configure_args_hash_result
@@ -19,7 +19,7 @@
     - name: Re-install keepalived
       ansible.builtin.import_tasks:
         file: install_keepalived.yml
-      when: keepalived_configure_args_hash_result is changed
+      when: keepalived_configure_args_hash_result is changed or rebuild
 
   rescue:
     - name: Install keepalived

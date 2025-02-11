@@ -14,6 +14,7 @@ elasticsearch_node_roles:
   es_master:
     - master
     - data
+    - remote_cluster_client
   es_hot:
     - data_content
     - data_hot
@@ -26,7 +27,6 @@ elasticsearch_node_roles:
     - transform
     - data_cold
     - data_content
-    - remote_cluster_client
 
 elasticsearch_http_port: 9200
 elasticsearch_transport_port: 9300
@@ -43,6 +43,7 @@ elasticsearch_config:
   bootstrap.memory_lock: true
   path.data: "{{ elk_data_dir }}/elasticsearch"
   path.logs: "{{ elk_logs_dir }}/elasticsearch"
+  s3.client.default.endpoint: "http://{{ groups['minio'] | first }}.{{ elk_domain }}"
   node.roles: |
     {% for role in
       (elasticsearch_node_roles | dict2items)
@@ -59,11 +60,10 @@ elasticsearch_keystore:
 
 # Snapshot storage with MinIO
 elasticsearch_minio_snapshot_bucket: "{{ minio_objects | selectattr('name', 'search', 'elasticsearch') | map(attribute='name') | first }}"
-elasticsearch_minio_endpoint: "{{ groups['minio'] | map('extract', hostvars, ['ansible_host']) | first }}"
+elasticsearch_minio_endpoint: "http://{{ groups['minio'] | first }}.{{ elk_domain }}"
 elasticsearch_minio_keystore:
   s3.client.default.access_key: "{{ lookup('file', inventory_dir + '/credentials/minio/' + elasticsearch_minio_snapshot_bucket + '_accessKey') }}"
   s3.client.default.secret_key: "{{ lookup('file', inventory_dir + '/credentials/minio/' + elasticsearch_minio_snapshot_bucket + '_secretKey') }}"
-  # s3.client.default.session_token:
 
 # Elasticsearch discovery settings
 elasticsearch_discovery_seed_hosts: >-

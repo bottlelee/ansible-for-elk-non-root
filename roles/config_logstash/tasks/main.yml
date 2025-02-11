@@ -1,3 +1,50 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for config_logstash
+- name: Update logstash.yml
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'logstash/logstash.yml.j2') | from_yaml | to_nice_yaml }}"
+    dest: "{{ elk_install_dir }}/logstash/config/logstash.yml"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+    mode: "0644"
+  notify: Restart logstash
+
+- name: Create some paths
+  ansible.builtin.file:
+    path: "{{ path }}"
+    state: directory
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+    mode: "0755"
+  with_items:
+    - "{{ elk_install_dir }}/logstash/pipeline"
+  loop_control:
+    loop_var: path
+
+- name: Update pipeline.yml
+  ansible.builtin.copy:
+    content: "{{ lookup('template', 'logstash/pipelines.yml.j2') | from_yaml | to_nice_yaml }}"
+    dest: "{{ elk_install_dir }}/logstash/config/pipelines.yml"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+    mode: "0644"
+  notify: Restart logstash
+
+- name: Update pipelines
+  ansible.builtin.template:
+    src: "logstash/pipeline/{{ pipeline.id }}.conf.j2"
+    dest: "{{ elk_install_dir }}/logstash/pipeline/{{ pipeline.id }}.conf"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+    mode: "0644"
+  loop: "{{ logstash_pipelines }}"
+  loop_control:
+    loop_var: pipeline
+    label: "{{ pipeline.id }}"
+  when: pipeline.enabled | default(true)
+  notify: Restart logstash
+
+- name: Update keystores
+  ansible.builtin.import_tasks:
+    file: keystores.yml

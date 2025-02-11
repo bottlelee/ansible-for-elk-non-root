@@ -1,0 +1,19 @@
+elasticsearch_roles:
+  logstash_writer:
+    cluster:
+      - "manage_index_templates"
+      - "monitor"
+      - "manage_ilm"
+    indices:
+      - names:
+          - "logstash-*"
+          - "*beat-*"
+          - ".ds-*"
+          - ".monitoring-*"
+          - ".watches"
+        privileges:
+          - "write"
+          - "create"
+          - "create_index"
+          - "manage"
+          - "manage_ilm"

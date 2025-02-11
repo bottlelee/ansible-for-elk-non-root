@@ -1,0 +1,17 @@
+elasticsearch_users:
+  logstash_writer:
+    password: "{{ logstash_writer_password }}"
+    roles:
+      - logstash_writer
+    full_name: "Logstash Writer"
+    email: ""
+    enabled: true
+
+# Elasticsearch built-in users
+elasticsearch_builtin_users:
+  - apm_system
+  - beats_system
+  - elastic
+  - kibana_system
+  - logstash_system
+  - remote_monitoring_user

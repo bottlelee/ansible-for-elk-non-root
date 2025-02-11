@@ -1,0 +1,7 @@
+---
+- name: Rollback config from backup
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ elk_install_dir }}/logstash/config/logstash.yml.bak"
+    dest: "{{ elk_install_dir }}/logstash/config/logstash.yml"
+  listen: Restart logstash

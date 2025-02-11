@@ -14,5 +14,5 @@
 # - name: Config snapshot repository
 #   ansible.builtin.import_tasks:
 #     file: snapshot_repository.yml
-#   when: minio_enabled
-#   run_once: true
+#   when:
+#     - minio_enabled

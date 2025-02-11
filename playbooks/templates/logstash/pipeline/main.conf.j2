@@ -1,0 +1,7 @@
+input {
+{{ logstash_default_agent_input | indent(4) }}
+}
+
+output {
+{{ logstash_default_es_output | indent(4) }}
+}

@@ -16,28 +16,30 @@
       default: docker
       private: false
     - name: prune_images
-      prompt: Prune images before creating the offline EPR container image?
-      default: false
+      prompt: Prune dangling images after pull(yes/no)?
+      default: true
       private: false
 
   tasks:
-    - name: Prune images
-      ansible.builtin.command: "{{ cmd_bin }} image prune -af"
-      changed_when: false
-      when: prune_images
-
     - name: Pulling image {{ epr_image }}
       community.docker.docker_image:
         name: "{{ epr_image }}"
         source: pull
+        force_source: true
       when: cmd_bin == "docker"
       notify: Export image
 
     - name: Pulling image {{ epr_image }}
       containers.podman.podman_image:
         name: "{{ epr_image }}"
+        force: true
       when: cmd_bin == "podman"
       notify: Export image
+
+    - name: Prune dangling images
+      ansible.builtin.command: "{{ cmd_bin }} image prune -f"
+      changed_when: false
+      when: prune_images
 
   handlers:
     - name: Exporting image {{ epr_image }}

@@ -33,12 +33,12 @@
       ansible.builtin.include_role:
         name: config_{{ elk_role }}
 
-    - name: Tasks for group "'elasticsearch'
+    - name: Tasks for group 'elasticsearch'
       when: "'elasticsearch' in group_names"
       ansible.builtin.import_tasks:
         file: elasticsearch.yml
 
-    - name: Tasks for group "'kibana'
+    - name: Tasks for group 'kibana'
       when: "'kibana' in group_names"
       ansible.builtin.import_tasks:
         file: kibana.yml

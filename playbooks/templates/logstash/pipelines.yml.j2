@@ -1,0 +1,9 @@
+{% for pipeline in logstash_pipelines
+  if (
+    pipeline.enabled | default(true)
+  )
+%}
+- pipeline.id: {{ pipeline.id }}
+  path.config: {{ logstash_pipeline_dir }}/{{ pipeline.id }}.conf
+
+{% endfor %}

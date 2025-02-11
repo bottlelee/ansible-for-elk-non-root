@@ -22,3 +22,6 @@ elk_local_certs_path: "{{ inventory_path }}/credentials/certs"
 
 # Certificates base path
 elk_certificates_path: "{{ elk_install_dir }}/elasticsearch/config/certs"
+
+# Rebuild default value, for apps need to be rebuilt, keepalived and nginx etc.
+rebuild: false

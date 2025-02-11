@@ -9,7 +9,7 @@
       ansible.builtin.import_tasks:
         file: bootstrap_elasticsearch.yml
 
-- name: Checking if node is already enrolled
+- name: Checking if node is joined to cluster
   ansible.builtin.uri:
     url: "{{ elasticsearch_gateway_url }}/_cat/nodes?pretty"
     url_username: elastic
@@ -33,7 +33,7 @@
     - elasticsearch_bootstrap_host not in ansible_all_ipv4_addresses
     - ansible_host not in cluster_nodes.content
 
-- name: Re-check if node is already enrolled
+- name: Re-check if node is joined to cluster
   ansible.builtin.uri:
     url: "{{ elasticsearch_gateway_url }}/_cat/nodes?pretty"
     url_username: elastic

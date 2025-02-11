@@ -1,0 +1,21 @@
+---
+- name: Update logrotate configuration
+  ansible.builtin.template:
+    src: "{{ logrotate_tpl }}"
+    dest: "{{ logrotate_dst }}"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+    mode: "0644"
+    validate: "/usr/sbin/logrotate --debug --state={{ logrotate_dst | dirname }}/logrotate.status %s"
+
+- name: Update cron job for logrotate
+  ansible.builtin.cron:
+    name: "Rotate {{ logrotate_app }} logs"
+    minute: "{{ logrotate_minute | default('*') }}"
+    hour: "{{ logrotate_hour | default('*') }}"
+    day: "{{ logrotate_day | default('*') }}"
+    month: "{{ logrotate_month | default('*') }}"
+    weekday: "{{ logrotate_weekday | default('*') }}"
+    job: "/usr/sbin/logrotate --state={{ logrotate_dst | dirname }}/logrotate.status {{ logrotate_dst }}"
+    user: "{{ elk_user }}"
+    state: present

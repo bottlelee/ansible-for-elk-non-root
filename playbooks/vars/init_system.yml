@@ -19,9 +19,9 @@ init_system_ssh_key_login: true
 # Extra hosts
 init_system_hosts: |-
   {% for host in (groups['all'] | sort) %}
-  {{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['inventory_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}.{{ elk_domain }}
+  {{ hostvars[host]['ansible_host'] }}  {{ hostvars[host]['inventory_hostname'].rjust(20) }} {{ hostvars[host]['inventory_hostname'].rjust(20) }}.{{ elk_domain }}
   {% endfor %}
 
   {% for host in (keepalived_vrrp_instances | sort(attribute='virtual_ipaddress')) %}
-  {{ host.virtual_ipaddress }} {{ host.name | lower }}.{{ elk_domain }}
+  {{ host.virtual_ipaddress }}  {{ (host.name | lower).rjust(20) }}.{{ elk_domain }}
   {% endfor %}

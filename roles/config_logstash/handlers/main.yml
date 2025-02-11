@@ -1,3 +1,54 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # handlers file for config_logstash
+
+- name: Restarting logstash
+  ansible.builtin.service:
+    name: logstash
+    state: restarted
+  listen: Restart logstash
+
+- name: Wait for logstash started
+  block:
+    - name: Wait for port 9600 active
+      ansible.builtin.wait_for:
+        port: 9600
+      listen: Restart logstash
+      register: restart_result
+  rescue:
+    - name: Rollback config from backup
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ elk_install_dir }}/logstash/config/logstash.yml.bak"
+        dest: "{{ elk_install_dir }}/logstash/config/logstash.yml"
+        mode: "0640"
+      notify: Restart logstash again
+
+- name: Backup config file
+  when: restart_result is succeeded
+  block:
+    - name: Backup logstash.yml
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ elk_install_dir }}/logstash/config/logstash.yml"
+        dest: "{{ elk_install_dir }}/logstash/config/.logstash.yml.{{ ansible_date_time.iso8601_basic_short }}"
+        mode: "0440"
+      listen: Restart logstash
+
+    - name: Update logstash.yml.bak link
+      ansible.builtin.file:
+        src: "{{ elk_install_dir }}/logstash/config/.logstash.yml.{{ ansible_date_time.iso8601_basic_short }}"
+        dest: "{{ elk_install_dir }}/logstash/config/logstash.yml.bak"
+        state: link
+      listen: Restart logstash
+
+- name: Restarting logstash
+  ansible.builtin.service:
+    name: logstash
+    state: restarted
+  listen: Restart logstash again
+
+- name: Wait for logstash started
+  ansible.builtin.wait_for:
+    port: 9600
+  listen: Restart logstash again

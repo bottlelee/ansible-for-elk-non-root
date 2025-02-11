@@ -1,3 +1,23 @@
 ---
+
+# logstash.yml template is under playbooks/templates/logstash/logstash.yml.j2
+
 logstash_input_agent_gateway: logstash.{{ elk_domain }}:{{ nginx_streams | selectattr('name', 'eq', 'elastic-agent') | map(attribute='listen_port') | first }}
 logstash_input_logstash_gateway: logstash.{{ elk_domain }}:{{ nginx_streams | selectattr('name', 'eq', 'logstash-input') | map(attribute='listen_port') | first }}
+
+logstash_pipeline_dir: "{{ elk_install_dir }}/logstash/pipeline"
+logstash_index_max_shards: 3
+logstash_index_max_replicas: 1
+logstash_refresh_interval: 30s
+
+logstash_pipelines:
+  - id: main
+    extra_params:
+      pipeline.workers: 3
+      queue.type: persisted
+
+logstash_default_agent_input: "{{ lookup('template', 'logstash/pipeline/default_agent_input.conf.j2') }}"
+logstash_default_es_output: "{{ lookup('template', 'logstash/pipeline/default_es_output.conf.j2') }}"
+
+logstash_keystores:
+  LOGSTASH_WRITER_PASS: "{{ logstash_writer_password }}"

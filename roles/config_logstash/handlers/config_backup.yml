@@ -1,0 +1,15 @@
+---
+- name: Backup logstash.yml
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ elk_install_dir }}/logstash/config/logstash.yml"
+    dest: "{{ elk_install_dir }}/logstash/config/.logstash.yml.{{ ansible_date_time.iso8601_basic_short }}"
+    mode: "0440"
+  listen: Restart logstash
+
+- name: Update logstash.yml.bak link
+  ansible.builtin.file:
+    src: "{{ elk_install_dir }}/logstash/config/.logstash.yml.{{ ansible_date_time.iso8601_basic_short }}"
+    dest: "{{ elk_install_dir }}/logstash/config/logstash.yml.bak"
+    state: link
+  listen: Restart logstash

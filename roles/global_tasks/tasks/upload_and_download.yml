@@ -1,3 +1,4 @@
+---
 - name: Check if {{ pkg_src }} exists
   ansible.builtin.stat:
     path: "{{ pkg_src }}"
@@ -17,18 +18,32 @@
 #     - download
 
 - name: Tasks for download
+  delegate_to: localhost
+  become: false
+  when: not pkg_src_stat.stat.exists
+  tags:
+    - download
+
   block:
-    - name: "Create local package store path '{{ pkg_src | dirname }}'"
+    - name: Create local package store path '{{ pkg_src | dirname }}'
       ansible.builtin.file:
         path: "{{ pkg_src | dirname }}"
         state: directory
         mode: "0755"
 
-    - name: Downloading {{ pkg_url }}
+    - name: NOTICE
+      ansible.builtin.debug:
+        msg: |
+          Starting download package from
+            {{ pkg_url }}
+          It may take a while
+          Please wait...
+
+    - name: Package has been downloaded from {{ pkg_url }}
       ansible.builtin.get_url:
         url: "{{ pkg_url }}"
         dest: "{{ pkg_src }}"
-        mode: "0444"
+        mode: "0644"
         backup: true
       register: download_result
       until: download_result is succeeded
@@ -38,15 +53,11 @@
     - name: Repeat tasks
       ansible.builtin.include_tasks:
         file: upload_and_download.yml
-  delegate_to: localhost
-  become: false
-  when: not pkg_src_stat.stat.exists
-  tags:
-    - download
-
 - name: Tasks for upload
+  tags:
+    - upload
   block:
-    - name: "Create remote package path '{{ pkg_dst }}'"
+    - name: Create remote package path '{{ pkg_dst }}'
       ansible.builtin.file:
         path: "{{ pkg_dst }}"
         state: directory
@@ -80,5 +91,3 @@
         mode: "{{ pkg_mode | default('0444') }}"
         backup: true
       when: pkg_is_archived is not defined
-  tags:
-    - upload

@@ -1,0 +1,22 @@
+# Ref: https://www.elastic.co/guide/en/logstash/current/logstash-settings-file.html
+
+path:
+  data: "{{ elk_data_dir }}/logstash"
+  logs: "{{ elk_logs_dir }}/logstash"
+
+pipeline:
+  batch:
+    size: 250
+    delay: 50
+
+node:
+  name: "{{ inventory_hostname }}.{{ elk_domain }}"
+
+queue:
+  type: persisted
+  max_bytes: 2g
+
+log:
+  level: "{{ (elk_env == 'prod') | ternary('warn', 'info') }}"
+
+allow_superuser: false

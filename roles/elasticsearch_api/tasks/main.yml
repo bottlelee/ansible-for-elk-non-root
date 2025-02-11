@@ -1,0 +1,23 @@
+---
+# tasks file for elasticsearch_api
+- name: Update elasticsearch roles
+  ansible.builtin.include_tasks: api.yml
+  with_dict: "{{ elasticsearch_roles }}"
+  loop_control:
+    loop_var: role
+    label: "{{ role.key }}"
+  vars:
+    elasticsearch_api_method: "{{ role.enabled | default(true) | ternary('POST', 'DELETE') }}"
+    elasticsearch_api_path: "_security/role/{{ role.key }}?pretty"
+    elasticsearch_api_body: "{{ role.value | from_yaml | to_nice_json }}"
+
+- name: Update elasticsearch users
+  ansible.builtin.include_tasks: api.yml
+  with_dict: "{{ elasticsearch_users }}"
+  loop_control:
+    loop_var: user
+    label: "{{ user.key }}"
+  vars:
+    elasticsearch_api_method: "{{ user.enabled | default(true) | ternary('POST', 'DELETE') }}"
+    elasticsearch_api_path: "_security/user/{{ user.key }}?pretty"
+    elasticsearch_api_body: "{{ user.value | from_yaml | to_nice_json }}"

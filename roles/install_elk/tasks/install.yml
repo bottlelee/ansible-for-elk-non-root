@@ -1,7 +1,7 @@
 ---
 - name: Install {{ elk_role }}
   block:
-    - name: Creat remote paths
+    - name: Create remote paths
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
@@ -16,14 +16,8 @@
           - "{{ elk_install_dir }}"
       loop: "{{ create_paths | sort }}"
 
-    # - name: Extract package to {{ elk_install_dir + '/' + elk_role + '-' + elk_version }}
-    #   ansible.builtin.unarchive:
-    #     src: "{{ elk_local_package_path }}/{{ elk_role }}/{{ elk_package_full_name }}"
-    #     dest: "{{ elk_install_dir }}"
-    #     creates: "{{ elk_install_dir }}/{{ elk_role }}-{{ elk_version }}/bin/{{ elk_role }}"
-
     - name: Extract package to {{ elk_install_dir + '/' + elk_role + '-' + elk_version }}
-      import_role:
+      ansible.builtin.import_role:
         name: global_tasks
         tasks_from: upload_and_download.yml
       vars:

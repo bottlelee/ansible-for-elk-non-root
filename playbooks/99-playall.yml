@@ -13,3 +13,6 @@
 
 - name: Config ELK
   ansible.builtin.import_playbook: 04-config-elk.yml
+
+- name: Create report files
+  ansible.builtin.import_playbook: 82-report.yml

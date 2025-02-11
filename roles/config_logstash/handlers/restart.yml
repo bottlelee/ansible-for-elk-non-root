@@ -1,0 +1,11 @@
+---
+- name: Restarting logstash
+  ansible.builtin.service:
+    name: logstash
+    state: restarted
+  listen: Restart logstash
+
+- name: Wait for logstash started
+  ansible.builtin.wait_for:
+    port: 9600
+  listen: Restart logstash
