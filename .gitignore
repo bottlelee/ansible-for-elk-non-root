@@ -2,5 +2,6 @@ playbooks/files/downloads/*
 credentials
 .vagrant
 inventories/*/files/*
+inventories/*/report/*
 ansible-docker/*.tar*
-playbooks/test.yml
+playbooks/test*.yml
