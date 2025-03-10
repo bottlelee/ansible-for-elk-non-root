@@ -1,17 +1,15 @@
 ---
 - name: Get cluster status
-  ansible.builtin.uri:
-    url: https://{{ elasticsearch_bootstrap_host }}:{{ elasticsearch_port | default(9200) }}/_cluster/health?wait_for_status=yellow&timeout=120s
-    method: GET
-    user: elastic
-    password: "{{ elasticsearch_elastic_password }}"
-    validate_certs: false
-    return_content: true
-    status_code:
+  ansible.builtin.import_role:
+    name: config_elasticsearch
+    tasks_from: api.yml
+  vars:
+    elasticsearch_api_path: "_cluster/health?wait_for_status=yellow&timeout=600s"
+    elasticsearch_api_status_code:
       - 200
+      - 502
       - "-1"
-  register: cluster_status
 
-- name: Set elasticsearch_bootstrap_enabled to {{ (cluster_status.status == 200) | ternary('false', 'true') }}
+- name: Set elasticsearch_bootstrap_enabled to {{ (es_api_response.status == 200) | ternary('false', 'true') }}
   ansible.builtin.set_fact:
-    elasticsearch_bootstrap_enabled: "{{ (cluster_status.status == 200) | ternary('false', 'true') }}"
+    elasticsearch_bootstrap_enabled: "{{ (es_api_response.status == 200) | ternary('false', 'true') }}"
