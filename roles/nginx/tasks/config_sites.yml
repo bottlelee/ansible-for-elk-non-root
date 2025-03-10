@@ -1,3 +1,4 @@
+---
 - name: Create site '{{ site.name }}' logs directory
   ansible.builtin.file:
     path: "{{ elk_logs_dir }}/nginx/{{ site.name }}"

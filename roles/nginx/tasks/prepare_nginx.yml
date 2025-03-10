@@ -16,14 +16,8 @@
       loop_control:
         loop_var: path
 
-    # - name: Extract nginx package to remote host
-    #   ansible.builtin.unarchive:
-    #     src: "{{ elk_local_package_path }}/{{ download_packages.nginx | basename }}"
-    #     dest: "{{ elk_build_dir }}"
-    #     creates: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
-
     - name: Extract nginx package to remote host
-      import_role:
+      ansible.builtin.import_role:
         name: global_tasks
         tasks_from: upload_and_download.yml
       vars:
@@ -31,13 +25,6 @@
         pkg_dst: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}"
         pkg_url: "{{ download_packages.nginx }}"
         pkg_bin: "{{ elk_build_dir }}/{{ download_packages.nginx | basename | regex_replace('.tar.gz', '') }}/sbin/nginx"
-
-    - name: Install yum packages
-      ansible.builtin.dnf:
-        name: "{{ nginx_compile_tools }}"
-        state: present
-      when: ansible_pkg_mgr in ('yum', 'dnf')
-      become: true
 
   rescue:
     - name: Download nginx
