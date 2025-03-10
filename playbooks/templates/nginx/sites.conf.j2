@@ -7,7 +7,7 @@ upstream {{ site.name }} {
 
 server {
     listen                  {{ site.listen_port | default('443') }} ssl;
-    server_name             {{ site.name }}.{{ elk_domain }};
+    server_name             {{ site.name }}.{{ elk_domain }} *.{{ site.name }}.{{ elk_domain }};
 
     access_log              {{ elk_logs_dir }}/nginx/{{ site.name }}/{{ site.name }}-access.log;
     error_log               {{ elk_logs_dir }}/nginx/{{ site.name }}/{{ site.name }}-error.log;

@@ -1,0 +1,20 @@
+services:
+  epr:
+    image: docker.elastic.co/package-registry/distribution:8.13.4
+    container_name: elastic-package-registry
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-L", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  artifacts:
+    image: nginx:stable
+    container_name: elastic-artifacts
+    restart: always
+    ports:
+      - 8080:80
+    volumes:
+      - ../downloads:/usr/share/nginx/html/downloads
+      - ./default.conf:/etc/nginx/conf.d/default.conf:ro

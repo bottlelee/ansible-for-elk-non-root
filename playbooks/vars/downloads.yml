@@ -4,7 +4,7 @@ download_packages:
   elasticsearch: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{ elk_version }}-linux-x86_64.tar.gz
   kibana: https://artifacts.elastic.co/downloads/kibana/kibana-{{ elk_version }}-linux-x86_64.tar.gz
   logstash: https://artifacts.elastic.co/downloads/logstash/logstash-{{ elk_version }}-linux-x86_64.tar.gz
-  nginx: https://nginx.org/download/nginx-1.26.2.tar.gz
+  nginx: https://nginx.org/download/nginx-1.26.3.tar.gz
   keepalived: https://keepalived.org/software/keepalived-2.3.2.tar.gz
   elastic_agent: https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-{{ elk_version }}-linux-x86_64.tar.gz
   minio: https://dl.min.io/server/minio/release/linux-amd64/minio

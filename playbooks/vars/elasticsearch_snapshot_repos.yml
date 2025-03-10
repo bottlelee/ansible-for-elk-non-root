@@ -1,0 +1,13 @@
+elasticsearch_snapshot_repos:
+  minio:
+    type: "s3"
+    settings:
+      endpoint: "minio.{{ elk_domain }}"
+      bucket: "elasticsearch-snapshots"
+
+# Snapshot storage with MinIO
+elasticsearch_minio_snapshot_bucket: "{{ minio_objects | selectattr('name', 'search', 'elasticsearch') | map(attribute='name') | first }}"
+elasticsearch_minio_endpoint: "qlelkminio.{{ elk_domain }}:9000"
+elasticsearch_minio_keystore:
+  s3.client.default.access_key: "{{ lookup('file', inventory_dir + '/credentials/minio/' + elasticsearch_minio_snapshot_bucket + '_accessKey') }}"
+  s3.client.default.secret_key: "{{ lookup('file', inventory_dir + '/credentials/minio/' + elasticsearch_minio_snapshot_bucket + '_secretKey') }}"

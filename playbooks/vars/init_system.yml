@@ -25,3 +25,32 @@ init_system_hosts: |-
   {% for host in (keepalived_vrrp_instances | sort(attribute='virtual_ipaddress')) %}
   {{ host.virtual_ipaddress }}  {{ (host.name | lower).rjust(20) }}.{{ elk_domain }}
   {% endfor %}
+
+init_system_packages:
+  - when: "ansible_pkg_manager in ['dnf', 'yum']"
+    packages:
+      - bzip2
+      - expect
+      - net-tools
+      - chrony
+      - tar
+      - gzip
+      - readline-devel
+      - patch
+      - ncurses-devel
+      - libaio-devel
+      - glibc-devel
+      - flex
+      - bison
+      - python3
+      - python3-pip
+      - wget
+      - git
+      - telnet
+      - logrotate
+      - crontabs
+      - gcc
+      - openssl-devel
+      - make
+      - unzip
+      - bash-completion

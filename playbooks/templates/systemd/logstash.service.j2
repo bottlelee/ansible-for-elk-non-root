@@ -7,7 +7,7 @@ User={{ elk_user }}
 Group={{ elk_user }}
 ExecStart={{ elk_install_dir }}/logstash/bin/logstash
 WorkingDirectory={{ elk_install_dir }}/logstash
-EnvironmentFile=-{{ elk_data_dir }}/logstash/logstash_keystore_pass
+EnvironmentFile=-{{ logstash_env_file }}
 
 Restart=unless-stopped
 RestartSec=5

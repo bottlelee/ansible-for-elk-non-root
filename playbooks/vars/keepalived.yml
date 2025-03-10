@@ -42,10 +42,4 @@ keepalived_vrrp_instances:
     unicast_src_ip: 192.168.56.254
     check_script: /bin/pidof nginx
 
-keepalived_dependencies:
-  yum:
-    - gcc
-    - openssl-devel
-    - make
-
 keepalived_options: -D

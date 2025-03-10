@@ -22,11 +22,12 @@ elasticsearch_node_roles:
     - data_content
     - data_warm
     - ingest
-  es_ml:
+  es_cold:
+    - data_content
+    - data_cold
+    - ingest
     - ml
     - transform
-    - data_cold
-    - data_content
 
 elasticsearch_http_port: 9200
 elasticsearch_transport_port: 9300
@@ -49,7 +50,7 @@ elasticsearch_config:
       (elasticsearch_node_roles | dict2items)
         if role.key in group_names
     %}
-    {{ role.value | sort }}
+    {{ role.value }}
     {% endfor %}
 
 # Keystore settings
@@ -57,13 +58,6 @@ elasticsearch_keystore:
   xpack.security.http.ssl.keystore.secure_password: "{{ elasticsearch_cert_password }}"
   xpack.security.transport.ssl.keystore.secure_password: "{{ elasticsearch_cert_password }}"
   xpack.security.transport.ssl.truststore.secure_password: "{{ elasticsearch_cert_password }}"
-
-# Snapshot storage with MinIO
-elasticsearch_minio_snapshot_bucket: "{{ minio_objects | selectattr('name', 'search', 'elasticsearch') | map(attribute='name') | first }}"
-elasticsearch_minio_endpoint: "http://{{ groups['minio'] | first }}.{{ elk_domain }}"
-elasticsearch_minio_keystore:
-  s3.client.default.access_key: "{{ lookup('file', inventory_dir + '/credentials/minio/' + elasticsearch_minio_snapshot_bucket + '_accessKey') }}"
-  s3.client.default.secret_key: "{{ lookup('file', inventory_dir + '/credentials/minio/' + elasticsearch_minio_snapshot_bucket + '_secretKey') }}"
 
 # Elasticsearch discovery settings
 elasticsearch_discovery_seed_hosts: >-

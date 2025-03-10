@@ -1,3 +1,9 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # defaults file for config_elasticsearch
+
+elasticsearch_api_method: GET
+elasticsearch_api_path: ""
+elasticsearch_api_user: elastic
+elasticsearch_api_pass: "{{ elasticsearch_elastic_password }}"
+elasticsearch_api_status_code: 200

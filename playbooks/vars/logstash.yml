@@ -21,3 +21,5 @@ logstash_default_es_output: "{{ lookup('template', 'logstash/pipeline/default_es
 
 logstash_keystores:
   LOGSTASH_WRITER_PASS: "{{ logstash_writer_password }}"
+
+logstash_env_file: "{{ elk_install_dir }}/logstash/config/.env"

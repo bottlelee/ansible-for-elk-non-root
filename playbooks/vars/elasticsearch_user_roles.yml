@@ -1,4 +1,4 @@
-elasticsearch_roles:
+elasticsearch_user_roles:
   logstash_writer:
     cluster:
       - "manage_index_templates"
