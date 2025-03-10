@@ -7,12 +7,46 @@
   ansible.builtin.blockinfile:
     path: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml"
     block: "{{ elasticsearch_config | to_nice_yaml }}"
-    marker: "#-------------------------- {mark} ANSIBLE MANAGED BLOCK --------------------------"
   notify: Restart elasticsearch
   when: elasticsearch_config is defined
 
-# - name: Config snapshot repository
+- name: Set/update keystore
+  ansible.builtin.include_tasks:
+    file: keystore.yml
+  with_dict:
+    - "{{ elasticsearch_minio_keystore }}"
+  loop_control:
+    loop_var: keystore
+    label: "{{ keystore.key }}"
+
+- name: Tasks for elasticsearch API request
+  when:
+    - not elasticsearch_bootstrap_enabled
+    - inventory_hostname == groups['es_master'][-1]
+  block:
+    - name: Update elasticsearch roles
+      ansible.builtin.include_tasks: api.yml
+      with_dict: "{{ elasticsearch_user_roles }}"
+      loop_control:
+        loop_var: role
+        label: "{{ role.key }}"
+      vars:
+        elasticsearch_api_method: "{{ role.enabled | default(true) | ternary('POST', 'DELETE') }}"
+        elasticsearch_api_path: "_security/role/{{ role.key }}?pretty"
+        elasticsearch_api_body: "{{ role.value | from_yaml | to_nice_json }}"
+
+    - name: Update elasticsearch users
+      ansible.builtin.include_tasks: api.yml
+      with_dict: "{{ elasticsearch_users }}"
+      loop_control:
+        loop_var: user
+        label: "{{ user.key }}"
+      vars:
+        elasticsearch_api_method: "{{ user.enabled | default(true) | ternary('POST', 'DELETE') }}"
+        elasticsearch_api_path: "_security/user/{{ user.key }}?pretty"
+        elasticsearch_api_body: "{{ user.value | from_yaml | to_nice_json }}"
+
+# - name: Update snapshot repository
 #   ansible.builtin.import_tasks:
 #     file: snapshot_repository.yml
-#   when:
-#     - minio_enabled
+#   when: "inventory_hostname == groups['elasticsearch'][-1]"

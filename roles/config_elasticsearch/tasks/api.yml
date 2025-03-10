@@ -1,0 +1,43 @@
+---
+- name: Print body content
+  ansible.builtin.debug:
+    msg: |
+      {{ elasticsearch_api_body }}
+  when: elasticsearch_api_body is defined
+
+- name: Requesting '{{ elasticsearch_gateway_url }}/{{ elasticsearch_api_path }}'
+  module_defaults:
+    ansible.builtin.uri:
+      url: "{{ elasticsearch_gateway_url }}/{{ elasticsearch_api_path }}"
+      method: "{{ elasticsearch_api_method }}"
+      url_username: "{{ elasticsearch_api_user }}"
+      url_password: "{{ elasticsearch_api_pass }}"
+      force_basic_auth: true
+      return_content: true
+      validate_certs: false
+      status_code: "{{ elasticsearch_api_status_code }}"
+
+  block:
+    - name: GET '{{ elasticsearch_gateway_url }}/{{ elasticsearch_api_path }}'
+      ansible.builtin.uri:
+      when:
+        - elasticsearch_api_body is not defined
+      register: es_api_get
+
+    - name: PUT/POST '{{ elasticsearch_gateway_url }}/{{ elasticsearch_api_path }}'
+      ansible.builtin.uri:
+        body_format: json
+        body: |
+          {{ elasticsearch_api_body }}
+      when:
+        - elasticsearch_api_body is defined
+      register: es_api_put_post
+
+- name: Set 'es_api_response' variable
+  ansible.builtin.set_fact:
+    es_api_response: "{{ es_api_get if elasticsearch_api_method == 'GET' else es_api_put_post }}"
+
+- name: Print return content
+  ansible.builtin.debug:
+    msg: "Returned content is {{ es_api_response.json | to_nice_json }}"
+  when: es_api_response.json is defined
