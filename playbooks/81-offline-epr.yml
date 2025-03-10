@@ -4,8 +4,9 @@
   become: false
   gather_facts: false
   vars:
-    epr_image: docker.elastic.co/package-registry/distribution:production
-    epr_local_dest: "{{ playbook_dir }}/files/downloads/elastic_package_registry_container.tar"
+    epr_default_version: 8.13.4
+    epr_image: "docker.elastic.co/package-registry/distribution:{{ epr_version | default(epr_default_version) }}"
+    epr_local_dest: "{{ playbook_dir }}/files/downloads/elastic_package_registry_container_{{ epr_version | default(epr_default_version) }}.tar"
   vars_prompt:
     - name: warning
       prompt: "WARNING: This playook can only run on a docker/podman host, not on the target host or in a container"
@@ -15,12 +16,29 @@
       prompt: "Choose a command: docker or podman"
       default: docker
       private: false
+    - name: epr_version
+      prompt: "Choose a version: {{ epr_default_version }} or other"
+      private: false
+      default: "{{ epr_default_version }}"
     - name: prune_images
       prompt: Prune dangling images after pull(yes/no)?
       default: true
       private: false
+    - name: force_export
+      prompt: Force export image(yes/no)?
+      default: false
+      private: false
 
   tasks:
+    - name: Tips
+      ansible.builtin.debug:
+        msg: |
+          We will use {{ cmd_bin }}
+            to pull {{ epr_image }}
+            and export it to {{ epr_local_dest }}
+            and compress it in xz format"
+          So, please wait...
+
     - name: Pulling image {{ epr_image }}
       community.docker.docker_image:
         name: "{{ epr_image }}"
@@ -28,6 +46,7 @@
         force_source: true
       when: cmd_bin == "docker"
       notify: Export image
+      register: docker_result
 
     - name: Pulling image {{ epr_image }}
       containers.podman.podman_image:
@@ -35,18 +54,46 @@
         force: true
       when: cmd_bin == "podman"
       notify: Export image
+      register: podman_result
+
+    - name: Compose up
+      ansible.builtin.command:
+        argv:
+          - "{{ cmd_bin }}"
+          - "compose"
+          - "-f"
+          - "es_registry_docker_compose.yml"
+          - "up"
+          - "-d"
+      args:
+        chdir: "{{ playbook_dir }}/files/elastic_package_registry"
+      changed_when: false
 
     - name: Prune dangling images
-      ansible.builtin.command: "{{ cmd_bin }} image prune -f"
+      ansible.builtin.command:
+        argv:
+          - "{{ cmd_bin }}"
+          - "image"
+          - "prune"
+          - "-f"
       changed_when: false
       when: prune_images
 
+    - name: Force export image
+      ansible.builtin.command:
+        argv:
+          - "{{ cmd_bin }}"
+          - "image"
+          - "ls"
+      changed_when: force_export
+      when: force_export
+      notify: Export image
+
   handlers:
     - name: Exporting image {{ epr_image }}
-      community.docker.docker_image:
+      community.docker.docker_image_export:
         name: "{{ epr_image }}"
-        source: local
-        archive_path: "{{ epr_local_dest }}"
+        path: "{{ epr_local_dest }}"
       when: cmd_bin == "docker"
       listen: Export image
       notify: Compress image

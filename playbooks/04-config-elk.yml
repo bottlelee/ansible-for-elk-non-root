@@ -13,55 +13,24 @@
   serial: 1
   become: false
   gather_facts: false
-  module_defaults:
-    ansible.builtin.uri:
-      url_username: elastic
-      url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
-      force_basic_auth: true
-      validate_certs: false
-      return_content: true
   roles:
     - role: config_elasticsearch
       tags: elasticsearch
 
 - name: Config ES nodes
-  hosts: elasticsearch:!es_master
+  hosts: "elasticsearch:!es_master"
   serial: 1
   become: false
   gather_facts: false
-  module_defaults:
-    ansible.builtin.uri:
-      url_username: elastic
-      url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
-      force_basic_auth: true
-      validate_certs: false
-      return_content: true
   roles:
     - role: config_elasticsearch
       tags: elasticsearch
-
-- name: Config Elasticsearch with API
-  hosts: es_master[0]
-  become: false
-  gather_facts: false
-  roles:
-    - role: elasticsearch_api
-      tags:
-        - elasticsearch_api
-        - es_api
 
 - name: Config Kibana
   hosts: kibana
   serial: 1
   become: false
   gather_facts: false
-  module_defaults:
-    ansible.builtin.uri:
-      url_username: elastic
-      url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
-      force_basic_auth: true
-      validate_certs: false
-      return_content: true
   roles:
     - role: config_kibana
       tags: kibana

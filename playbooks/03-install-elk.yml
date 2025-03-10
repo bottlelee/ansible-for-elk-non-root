@@ -33,7 +33,7 @@
         - ansible_host != elasticsearch_bootstrap_host
 
 - name: Deploy ELK nodes
-  hosts: elasticsearch:!es_master
+  hosts: "elasticsearch:!es_master"
   become: false
   gather_facts: false
   serial: 1

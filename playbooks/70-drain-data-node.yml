@@ -1,0 +1,104 @@
+---
+- name: This playbook will drain a node
+  hosts: elasticsearch
+  become: false
+  gather_facts: false
+  run_once: true
+  vars_prompt:
+    - name: "drain_node"
+      prompt: "Which node do you want to drain?"
+      private: false
+      default: "{{ groups['elasticsearch'] | join(', ') }}"
+
+  pre_tasks:
+    - name: Import pre tasks
+      ansible.builtin.import_role:
+        name: pre_tasks
+
+    - name: Check if node is in the list of data nodes
+      ansible.builtin.fail:
+        msg: "Node '{{ drain_node }}' is not in the list of data nodes"
+      when:
+        - "drain_node == item"
+        - "'data' not in elasticsearch_config['node.roles']"
+      loop: "{{ groups['elasticsearch'] }}"
+
+  tasks:
+    - name: Print drain message
+      ansible.builtin.debug:
+        msg: |
+          We're going to draining node '{{ drain_node }}'
+          This node has roles with the following values:
+            {{ hostvars[drain_node]['elasticsearch_config']['node.roles'] }}
+
+    - name: Do you confirm the drain message?
+      ansible.builtin.pause:
+        prompt: "Do you confirm the drain message?"
+        echo: false
+        seconds: 300
+
+    - name: Stop allocation of new shards
+      ansible.builtin.import_role:
+        name: config_elasticsearch
+        tasks_from: api.yml
+      vars:
+        elasticsearch_api_method: "PUT"
+        elasticsearch_api_path: "_cluster/settings"
+        elasticsearch_api_body: |
+          {
+            "persistent": {
+              "cluster.routing.allocation.enable": "none"
+            }
+          }
+
+    - name: Exclude node from shard allocation
+      ansible.builtin.import_role:
+        name: config_elasticsearch
+        tasks_from: api.yml
+      vars:
+        elasticsearch_api_method: "PUT"
+        elasticsearch_api_path: "_cluster/settings"
+        elasticsearch_api_body: |
+          {
+            "persistent": {
+              "cluster.routing.allocation.exclude._name": "{{ drain_node }}.{{ elk_domain }}"
+            }
+          }
+
+    - name: Wait for relocating to start
+      ansible.builtin.pause:
+        prompt: "Wait for relocating to start"
+        seconds: 30
+
+    - name: Wait for relocating to finish
+      ansible.builtin.import_role:
+        name: config_elasticsearch
+        tasks_from: api.yml
+      vars:
+        elasticsearch_api_method: "GET"
+        elasticsearch_api_path: "_cluster/health"
+      until:
+        - (es_api_response.json.active_shards_percent_as_number | int) == 100
+      retries: 999
+      delay: 15
+
+    - name: Start allocation of new shards
+      ansible.builtin.import_role:
+        name: config_elasticsearch
+        tasks_from: api.yml
+      vars:
+        elasticsearch_api_method: "PUT"
+        elasticsearch_api_path: "_cluster/settings"
+        elasticsearch_api_body: |
+          {
+            "persistent": {
+              "cluster.routing.allocation.enable": "all"
+            }
+          }
+
+    - name: Stop node from accepting new data
+      ansible.builtin.service:
+        name: elasticsearch
+        state: stopped
+      when: "(es_api_response.json.active_shards_percent_as_number | int) == 100"
+      delegate_to: "{{ drain_node }}"
