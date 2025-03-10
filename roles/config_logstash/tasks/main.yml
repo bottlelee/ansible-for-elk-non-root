@@ -45,6 +45,17 @@
   when: pipeline.enabled | default(true)
   notify: Restart logstash
 
-- name: Update keystores
-  ansible.builtin.import_tasks:
-    file: keystores.yml
+- name: "Update {{ logstash_env_file }}"
+  ini_file:
+    option: "{{ keystore.key }}"
+    value: "{{ keystore.value }}"
+    dest: "{{ logstash_env_file }}"
+    no_extra_spaces: true
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+    mode: "0600"
+  no_log: true
+  with_dict: "{{ logstash_keystores }}"
+  loop_control:
+    loop_var: keystore
+    label: "{{ keystore.key }}"
