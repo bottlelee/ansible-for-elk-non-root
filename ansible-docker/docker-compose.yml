@@ -17,8 +17,12 @@ services:
       SEMAPHORE_ADMIN_EMAIL: haibin.li@technet.com.mo
       SEMAPHORE_DB_PATH: /home/semaphore/data
       SEMAPHORE_CONFIG_PATH: /home/semaphore/config
+      SEMAPHORE_TMP_PATH: /home/semaphore/tmp
       TIMEZONE: Asia/Shanghai
     user: semaphore
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - semaphore_config:/home/semaphore/config
       - semaphore_data:/home/semaphore/data
