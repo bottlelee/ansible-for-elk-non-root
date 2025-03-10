@@ -21,50 +21,13 @@
         file: install_keepalived.yml
       when: keepalived_configure_args_hash_result is changed or rebuild
 
+    - name: Config keepalived
+      ansible.builtin.import_tasks: config_keepalived.yml
+
   rescue:
     - name: Install keepalived
       ansible.builtin.import_tasks:
         file: install_keepalived.yml
 
-- name: Create conf.d path
-  ansible.builtin.file:
-    path: "{{ elk_install_dir }}/keepalived/conf.d"
-    state: directory
-    owner: "{{ elk_user }}"
-    group: "{{ elk_group }}"
-    recurse: true
-  become: true
-
-- name: Config vrrp instances
-  ansible.builtin.template:
-    src: keepalived/vrrp_instance.conf.j2
-    dest: "{{ elk_install_dir }}/keepalived/conf.d/{{ instance.name | replace('-', '_') }}.conf"
-    mode: "0640"
-    owner: "{{ elk_user }}"
-    group: "{{ elk_group }}"
-  loop: "{{ keepalived_vrrp_instances }}"
-  loop_control:
-    loop_var: instance
-    label: "{{ instance.virtual_ipaddress }}"
-  notify: Reload keepalived
-
-- name: Update keepalived config
-  ansible.builtin.template:
-    src: keepalived/keepalived.conf.j2
-    dest: "{{ elk_install_dir }}/keepalived/etc/keepalived/keepalived.conf"
-    mode: "0640"
-    owner: "{{ elk_user }}"
-    group: "{{ elk_group }}"
-    validate: "{{ elk_install_dir }}/keepalived/sbin/keepalived -t -f %s"
-  become: true
-  notify: Restart keepalived
-
-- name: Update keepalived start options
-  ini_file:
-    path: "{{ elk_install_dir }}/keepalived/etc/sysconfig/keepalived"
-    section: ""
-    option: KEEPALIVED_OPTIONS
-    value: "{{ keepalived_options }}"
-    mode: "0640"
-  become: true
-  notify: Restart keepalived
+    - name: Config keepalived
+      ansible.builtin.import_tasks: config_keepalived.yml

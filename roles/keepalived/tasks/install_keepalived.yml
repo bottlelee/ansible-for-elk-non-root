@@ -24,18 +24,6 @@
         pkg_url: "{{ download_packages.keepalived }}"
         pkg_bin: "{{ elk_build_dir }}/{{ download_packages.keepalived | basename | regex_replace('.tar.gz', '') }}/sbin/keepalived"
 
-    - name: Install keepalived dependencies
-      ansible.builtin.package:
-        name: "{{ keepalived_dependencies.yum }}"
-      when: ansible_pkg_mgr in ['yum', 'dnf']
-      become: true
-
-    - name: Install keepalived dependencies
-      ansible.builtin.package:
-        name: "{{ keepalived_dependencies.apt }}"
-      when: ansible_pkg_mgr in ['apt', 'apt-get']
-      become: true
-
     - name: Print configure args
       ansible.builtin.debug:
         msg: ./configure {{ keepalived_configure_args | sort | join(' ') }}
