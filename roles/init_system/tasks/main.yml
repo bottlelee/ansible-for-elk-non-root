@@ -1,40 +1,29 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for setup_systemd_service
-
-- name: Set hostname
-  ansible.builtin.hostname:
-    name: "{{ inventory_hostname }}"
+- name: Config hosts
+  ansible.builtin.import_tasks:
+    file: hosts.yml
 
 - name: Set timezone
   ansible.builtin.timezone:
     name: "{{ elk_timezone | default('Asia/Shanghai') }}"
 
-- name: Adjust Permissions with polkit
-  ansible.builtin.template:
-    src: systemd/polkit.rules.j2
-    dest: /etc/polkit-1/rules.d/99-{{ elk_role }}.rules
-    mode: "0644"
-    backup: true
-  notify: Restart polkit
-
-- name: Create/update /etc/systemd/system/{{ elk_role + '.service' }}
-  ansible.builtin.template:
-    src: "{{ service_template }}"
-    dest: /etc/systemd/system/{{ elk_role }}.service
-    mode: "0644"
-    owner: "{{ elk_user }}"
-    group: "{{ elk_group }}"
-  with_fileglob:
-    - "{{ playbook_dir }}/templates/systemd/{{ elk_role }}.service.j2"
+- name: Install system wide packages
+  ansible.builtin.package:
+    name: "{{ pkg.packages }}"
+    state: present
+  loop: "{{ init_system_packages | unique }}"
   loop_control:
-    loop_var: service_template
+    loop_var: pkg
+    label: "Installing {{ pkg.packages[0:3] | join(',') }} and more. Please wait..."
+  when:
+    - init_system_packages is defined
+    - pkg.when
 
-- name: Reload systemd
-  ansible.builtin.systemd:
-    name: "{{ elk_role }}"
-    daemon_reload: true
-    enabled: true
+- name: Config systemd
+  ansible.builtin.import_tasks:
+    file: systemd.yml
 
 - name: Config sysctl
   ansible.posix.sysctl:
@@ -64,14 +53,3 @@
     limit_type: "{{ ulimit.split(' ')[1] }}"
     limit_item: "{{ ulimit.split(' ')[2] }}"
     limit_value: "{{ ulimit.split(' ')[3] }}"
-
-- name: Config /etc/hosts
-  ansible.builtin.blockinfile:
-    path: /etc/hosts
-    block: |-
-      {{ init_system_hosts }}
-    mode: "0644"
-    owner: "{{ elk_user }}"
-    group: "{{ elk_group }}"
-    create: true
-    backup: true

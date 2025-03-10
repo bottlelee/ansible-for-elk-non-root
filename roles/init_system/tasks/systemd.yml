@@ -1,0 +1,71 @@
+---
+- name: Adjust Permissions with polkit
+  ansible.builtin.template:
+    src: systemd/polkit.rules.j2
+    dest: /etc/polkit-1/rules.d/99-{{ elk_role }}.rules
+    mode: "0644"
+    backup: true
+  notify: Restart polkit
+
+- name: Create/update /etc/systemd/system/{{ elk_role + '.service' }}
+  ansible.builtin.template:
+    src: "{{ service_template }}"
+    dest: /etc/systemd/system/{{ elk_role }}.service
+    mode: "0644"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+  with_fileglob:
+    - "{{ playbook_dir }}/templates/systemd/{{ elk_role }}.service.j2"
+  loop_control:
+    loop_var: service_template
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    name: "{{ elk_role }}"
+    daemon_reload: true
+    enabled: true
+
+- name: Create bash completion config path
+  ansible.builtin.file:
+    path: "/home/{{ elk_user }}/.config/bash_completion.d"
+    state: directory
+    mode: "0755"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+
+- name: Add bash completion config
+  ansible.builtin.copy:
+    content: |-
+      _{{ cmd }}()
+        {
+          local cur prev
+          COMPREPLY=()
+          cur="${COMP_WORDS[COMP_CWORD]}"
+          prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+          if [[ $prev == "{{ cmd }}" ]]; then
+              COMPREPLY=( $(compgen -W "start stop restart status enable disable list-unit-files" -- $cur) )
+          fi
+        }
+
+      complete -F _{{ cmd }} {{ cmd }}
+    dest: "/home/{{ elk_user }}/.config/bash_completion.d/{{ cmd }}"
+    mode: "0644"
+    owner: "{{ elk_user }}"
+    group: "{{ elk_group }}"
+  with_items:
+    - systemctl
+    - service
+  loop_control:
+    loop_var: cmd
+
+- name: Enable bash completion
+  ansible.builtin.lineinfile:
+    path: "/home/{{ elk_user }}/.bashrc"
+    line: "source /home/{{ elk_user }}/.config/bash_completion.d/{{ cmd }}"
+    insertafter: EOF
+  with_items:
+    - systemctl
+    - service
+  loop_control:
+    loop_var: cmd
