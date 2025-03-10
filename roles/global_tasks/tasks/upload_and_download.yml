@@ -39,7 +39,7 @@
           It may take a while
           Please wait...
 
-    - name: Package has been downloaded from {{ pkg_url }}
+    - name: Downloading from {{ pkg_url }}
       ansible.builtin.get_url:
         url: "{{ pkg_url }}"
         dest: "{{ pkg_src }}"
@@ -53,6 +53,7 @@
     - name: Repeat tasks
       ansible.builtin.include_tasks:
         file: upload_and_download.yml
+
 - name: Tasks for upload
   tags:
     - upload
