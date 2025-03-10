@@ -2,7 +2,7 @@
 # tasks file for elasticsearch_api
 - name: Update elasticsearch roles
   ansible.builtin.include_tasks: api.yml
-  with_dict: "{{ elasticsearch_roles }}"
+  with_dict: "{{ elasticsearch_user_roles }}"
   loop_control:
     loop_var: role
     label: "{{ role.key }}"

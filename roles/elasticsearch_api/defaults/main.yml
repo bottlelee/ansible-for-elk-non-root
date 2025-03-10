@@ -1,2 +1,7 @@
 ---
 # defaults file for elasticsearch_api
+elasticsearch_api_method: GET
+elasticsearch_api_path: ""
+elasticsearch_api_user: elastic
+elasticsearch_api_pass: "{{ elasticsearch_elastic_password }}"
+elasticsearch_api_status_code: 200
