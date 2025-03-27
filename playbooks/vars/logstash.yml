@@ -13,7 +13,6 @@ logstash_refresh_interval: 30s
 logstash_pipelines:
   - id: main
     extra_params:
-      pipeline.workers: 3
       queue.type: persisted
 
 logstash_default_agent_input: "{{ lookup('template', 'logstash/pipeline/default_agent_input.conf.j2') }}"

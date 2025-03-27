@@ -6,12 +6,16 @@
     state: absent
   listen: Restart elasticsearch
 
-- name: Update 'discovery.seed_hosts' in elasticsearch.yml
+- name: Update config after cluster bootstrap in elasticsearch.yml
   ansible.builtin.lineinfile:
     path: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml"
-    line: "discovery.seed_hosts: {{ elasticsearch_discovery_seed_hosts }}"
-    regexp: "^discovery.seed_hosts:"
+    line: "{{ line.key }}: {{ line.value }}"
+    regexp: "^{{ line.key }}:"
+  when: elasticsearch_bootstrap_enabled
   listen: Restart elasticsearch
+  with_dict: "{{ elasticsearch_after_bootstrap_config }}"
+  loop_control:
+    loop_var: line
 
 - name: Restarting elasticsearch
   ansible.builtin.service:

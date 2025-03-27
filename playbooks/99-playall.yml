@@ -2,11 +2,11 @@
 - name: Prepare OS system
   ansible.builtin.import_playbook: 00-prepare.yml
 
-- name: Install nginx and keepalived
-  ansible.builtin.import_playbook: 01-nginx-keepalived.yml
-
 - name: Deploy/config minio
   ansible.builtin.import_playbook: 02-minio.yml
+
+- name: Install nginx and keepalived
+  ansible.builtin.import_playbook: 01-nginx-keepalived.yml
 
 - name: Deploy ELK
   ansible.builtin.import_playbook: 03-install-elk.yml

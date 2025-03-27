@@ -1,3 +1,4 @@
 ---
+
 fleet_server_gateway_port: "{{ nginx_sites | selectattr('name', 'eq', 'fleet-server') | map(attribute='listen_port') | first }}"
 fleet_server_gateway_url: "https://fleet-server.{{ elk_domain }}:{{ fleet_server_gateway_port }}"

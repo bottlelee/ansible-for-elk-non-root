@@ -13,7 +13,6 @@
   become: false
   gather_facts: false
   serial: 1
-
   roles:
     - role: nginx
       tags: nginx

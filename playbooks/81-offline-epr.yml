@@ -85,7 +85,7 @@
           - "{{ cmd_bin }}"
           - "image"
           - "ls"
-      changed_when: force_export
+      changed_when: force_export is true
       when: force_export
       notify: Export image
 

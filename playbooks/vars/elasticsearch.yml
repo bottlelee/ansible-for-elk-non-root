@@ -53,6 +53,10 @@ elasticsearch_config:
     {{ role.value }}
     {% endfor %}
 
+elasticsearch_after_bootstrap_config:
+  xpack.security.http.ssl.client_authentication: "none"
+  discovery.seed_hosts: "{{ elasticsearch_discovery_seed_hosts }}"
+
 # Keystore settings
 elasticsearch_keystore:
   xpack.security.http.ssl.keystore.secure_password: "{{ elasticsearch_cert_password }}"
