@@ -36,6 +36,7 @@ Vagrant.configure("2") do |config|
     echo "IPV6_PEERROUTES=no" | tee -a /etc/sysconfig/network-scripts/ifcfg-eth1
     echo "IPV6FORWARDING=no" | tee -a /etc/sysconfig/network-scripts/ifcfg-eth1
     echo "IPV6_AUTOTUNNEL=no" | tee -a /etc/sysconfig/network-scripts/ifcfg-eth1
+    echo "fastestmirror=true" | tee -a /etc/dnf/dnf.conf
 
     timedatectl set-timezone "Asia/Shanghai"
     timedatectl status

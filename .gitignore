@@ -5,3 +5,4 @@ inventories/*/files/*
 inventories/*/report/*
 ansible-docker/*.tar*
 playbooks/test*.yml
+.ansible/.lock

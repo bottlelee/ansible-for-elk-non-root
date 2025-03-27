@@ -16,6 +16,7 @@ case "$1" in
         ;;
     rebuild)
         vagrant destroy -f
+        vagrant box update --force
         vagrant up
         vagrant snapshot save init
         ;;
