@@ -13,6 +13,7 @@ services:
     image: nginx:stable
     container_name: elastic-artifacts
     restart: always
+    cpus: 0.5
     ports:
       - 8080:80
     volumes:
