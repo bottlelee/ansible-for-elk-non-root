@@ -34,7 +34,7 @@ COPY ssh_config /home/semaphore/.ssh/config
 RUN pip3 install --user --no-cache-dir --upgrade pip \
   && pip3 install --user --no-cache-dir netaddr pyyaml jmespath ansible \
     pywinrm passlib requests docker cryptography pyOpenSSL elasticsearch \
-    elasticsearch-curator
+    elasticsearch-curator bs4
 
 RUN fish -c 'function pansible; ansible-playbook $argv; end; funcsave pansible' \
   && mkdir -p ~/.config/fish/completions/ \
