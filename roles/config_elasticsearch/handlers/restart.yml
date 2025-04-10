@@ -9,13 +9,16 @@
 - name: Update config after cluster bootstrap in elasticsearch.yml
   ansible.builtin.lineinfile:
     path: "{{ elk_install_dir }}/elasticsearch/config/elasticsearch.yml"
-    line: "{{ line.key }}: {{ line.value }}"
+    line: "{{ line_str }}"
     regexp: "^{{ line.key }}:"
   when: elasticsearch_bootstrap_enabled
   listen: Restart elasticsearch
   with_dict: "{{ elasticsearch_after_bootstrap_config }}"
+  vars:
+    line_str: "{{ line.key }}: {{ line.value }}"
   loop_control:
     loop_var: line
+    label: "{{ line_str }}"
 
 - name: Restarting elasticsearch
   ansible.builtin.service:

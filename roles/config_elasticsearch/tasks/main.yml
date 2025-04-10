@@ -18,6 +18,7 @@
   loop_control:
     loop_var: keystore
     label: "{{ keystore.key }}"
+  when: minio_enabled
 
 - name: Tasks for elasticsearch API request
   when:

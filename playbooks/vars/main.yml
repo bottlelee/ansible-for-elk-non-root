@@ -1,6 +1,6 @@
 ---
 # Basic info
-elk_version: 8.13.2
+elk_version: 8.13.4
 elk_user: vagrant
 elk_group: vagrant
 

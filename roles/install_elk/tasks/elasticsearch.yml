@@ -11,7 +11,7 @@
 
 - name: Checking if node is joined to cluster
   ansible.builtin.uri:
-    url: "{{ elasticsearch_gateway_url }}/_cat/nodes?pretty"
+    url: "https://{{ elasticsearch_bootstrap_host }}:{{ elasticsearch_http_port }}/_cat/nodes?pretty"
     url_username: elastic
     url_password: "{{ lookup('file', inventory_dir + '/credentials/passwords/passwd_elastic') }}"
     force_basic_auth: true

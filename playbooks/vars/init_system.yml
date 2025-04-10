@@ -3,6 +3,8 @@
 init_system_sysctl:
   vm.max_map_count: 262144
   vm.swappiness: 1
+  vm.dirty_ratio: 80
+  vm.dirty_background_ratio: 10
   vm.overcommit_memory: 1
   fs.file-max: 65536
   net.ipv4.ip_unprivileged_port_start: 80 # Allow non-root users to use port 80 and above
@@ -16,6 +18,9 @@ init_system_ulimit:
 # TODO: Enable SSH key login
 init_system_ssh_key_login: true
 
+# Disable selinux
+init_system_selinux: false
+
 # Extra hosts
 init_system_hosts: |-
   {% for host in (groups['all'] | sort) %}
@@ -26,6 +31,13 @@ init_system_hosts: |-
   {{ host.virtual_ipaddress }}  {{ (host.name | lower).rjust(20) }}.{{ elk_domain }}
   {% endfor %}
 
+  {% if 'elasticsearch' in group_names %}
+  {% for host in groups['minio'] %}
+  {{ hostvars[host]['ansible_host'] }}  {{ 'elasticsearch-snapshots'.rjust(20) }}.{{ hostvars[host]['inventory_hostname'] }}.{{ elk_domain }}
+  {% endfor %}
+  {% endif %}
+
+# Install packages
 init_system_packages:
   - when: "ansible_pkg_manager in ['dnf', 'yum']"
     packages:

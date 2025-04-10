@@ -44,7 +44,7 @@ elasticsearch_config:
   bootstrap.memory_lock: true
   path.data: "{{ elk_data_dir }}/elasticsearch"
   path.logs: "{{ elk_logs_dir }}/elasticsearch"
-  s3.client.default.endpoint: "http://{{ groups['minio'] | first }}.{{ elk_domain }}"
+  s3.client.default.endpoint: "http://{{ groups['minio'] | first }}.{{ elk_domain }}:9000"
   node.roles: |
     {% for role in
       (elasticsearch_node_roles | dict2items)

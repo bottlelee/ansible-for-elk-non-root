@@ -1,6 +1,17 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for setup_systemd_service
+- name: Disable firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+    enabled: false
+
+- name: Disable selinux
+  ansible.posix.selinux:
+    policy: targeted
+    state: disabled
+
 - name: Config hosts
   ansible.builtin.import_tasks:
     file: hosts.yml
@@ -36,6 +47,15 @@
   loop_control:
     loop_var: sysctl
     label: "{{ sysctl.key }}={{ sysctl.value }}"
+
+# - name: Config hugepages
+#   ansible.posix.sysctl:
+#     name: vm.nr_hugepages
+#     value: 262144
+#     state: present
+#     ignoreerrors: true
+#     reload: true
+#   when: "'elasticsearch' in group_names"
 
 - name: Config ulimit
   pam_limits:
