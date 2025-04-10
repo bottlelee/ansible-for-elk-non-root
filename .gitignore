@@ -6,3 +6,4 @@ inventories/*/report/*
 ansible-docker/*.tar*
 playbooks/test*.yml
 .ansible/.lock
+logs/ansible_log.txt

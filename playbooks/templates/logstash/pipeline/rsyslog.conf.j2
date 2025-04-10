@@ -1,0 +1,37 @@
+input {
+  tcp {
+    port => 514
+    codec => multiline {
+      pattern => "^%{SYSLOGBASE}"
+      negate => true
+      what => "previous"
+      max_age => 5
+      max_bytes => 10485760
+    }
+  }
+}
+
+filter {
+  if [type] == "rsyslog" {
+    mutate {
+      replace => {
+        "message" => "%{message}"
+      }
+    }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => [
+{% for es in groups['es_hot'] %}
+      "{{ es }}.{{ elk_domain }}:{{ elasticsearch_http_port }}"{{ ',' if not loop.last else '' }}
+{% endfor %}
+    ]
+    user => "logstash_writer"
+    password => "${LOGSTASH_WRITER_PASS}"
+    ssl_enabled => true
+    ssl_verification_mode => "none"
+    index => "rsyslog-%{+YYYY.MM.dd}"
+  }
+} 
