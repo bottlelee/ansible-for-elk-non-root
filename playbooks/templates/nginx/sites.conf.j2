@@ -18,10 +18,14 @@ server {
     location {{ site.location | default('/') }} {
         proxy_pass          {{ site.proxy_protocol }}://{{ site.name }};
         proxy_ssl_verify    {{ site.proxy_ssl_verify | default('off') }};
-        proxy_set_header    Host $host;
-        proxy_set_header    X-Real-IP $remote_addr;
-        proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header    X-Forwarded-Proto $scheme;
+{% for header in (nginx_default_headers | sort) %}
+        proxy_set_header    {{ header }};
+{% endfor %}
+{% if site.extra_headers is defined %}
+{% for header in (site.extra_headers | sort) %}
+        proxy_set_header    {{ header }};
+{% endfor %}
+{% endif %}
     }
 
     error_page              404 /404.html;
